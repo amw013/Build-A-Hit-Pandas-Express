@@ -48,7 +48,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 
-.create-btn {
+/* .create-btn {
   width: 240px;
   height: 80px;
   border-radius: 14px;
@@ -70,7 +70,31 @@ input[type="range"]::-webkit-slider-thumb:hover {
   justify-content: center;
 
   transition: 0.22s ease;
+} */
+
+.create-btn {
+  width: 240px;
+  height: 80px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  color: white;
+  font-weight: 700;
+
+  --convexity: 2.5;
+  --metal: chrome;
+  background: #cfcfcf;
+
+  margin: 0 auto;     
+  display: block;  
+
+  transition: 0.22s ease;
 }
+
 
 .create-btn:hover {
   box-shadow:
@@ -104,4 +128,67 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 body {
   font-family: 'Montserrat', sans-serif;
+}
+
+
+#sliders-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+}
+
+.slider-label {
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.v-slider {
+  position: relative;
+  width: 22px;
+  height: 200px;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+}
+
+.v-track {
+  position: absolute;
+  width: 6px;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #555, #333);
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
+}
+
+.v-thumb {
+  position: absolute;
+  width: 28px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: grab;
+
+  background: linear-gradient(135deg, #dcdcdc, #efefef);
+  border: 1px solid #555;
+  box-shadow:
+    inset 2px 2px 5px rgba(255,255,255,0.4),
+    inset -2px -2px 5px rgba(0,0,0,0.3),
+    0 0 4px rgba(0,0,0,0.6);
+}
+
+.v-thumb:active {
+  cursor: grabbing;
+}
+
+.slider-value {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #ff99e6;
 }
