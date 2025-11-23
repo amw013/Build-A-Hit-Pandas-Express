@@ -93,16 +93,22 @@ input[type="range"]::-webkit-slider-thumb:hover {
   display: block;  
 
   transition: 0.22s ease;
+  overflow: visible;
 }
 
 
 .create-btn:hover {
+  position: relative;
+  z-index: 10;
+
   box-shadow:
     0 0 12px #ff006e,
     0 0 28px #ff006e,
     0 0 45px #ff006e;
+
   transform: translateY(-1px);
 }
+
 
 .create-btn:active {
   transform: translateY(2px);
