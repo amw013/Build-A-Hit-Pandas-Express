@@ -192,3 +192,27 @@ body {
   font-size: 0.9rem;
   color: #ff99e6;
 }
+
+.hero {
+  background: #000;            
+  color: white;
+  text-align: center;
+
+  padding: 120px 20px 100px;   
+  
+  font-family: 'Montserrat', sans-serif;
+  border-bottom: 2px solid #222; 
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  opacity: 0.85;
+  letter-spacing: 1px;
+}
