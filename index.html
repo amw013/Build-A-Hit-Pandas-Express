@@ -33,15 +33,34 @@
     <div class="sliders-container" id="sliders-container">
     </div>
 
+    <div class="search-container">
+    <input
+      id="songArtistSearchInput"
+      type="text"
+      placeholder="Search by song or artist"
+    />
+    <button id="songArtistSearchBtn" class="search-btn metallicss">
+      SEARCH
+    </button>
+    <div id="songArtistSearchFeedback" class="search-feedback"></div>
+    <div id="songArtistSearchResults" class="search-results"></div>
+  </div>
+
     <button id="createSongBtn" class="create-btn metallicss">
-        CREATE SONG
+      CREATE SONG
     </button>
 
+    <button id="alreadyHitBtn" class="create-btn metallicss">
+      RANDOM HIT SONG
+    </button>
+
+    <div id="hitSongInfo" class="hit-song-info"></div>
+      
 
   <section id="results" class="results hidden">
 
     <div class="scroll-section" id="result-1">
-      <h2>Your Song’s Popularity</h2>
+      <h2>Song’s Hit Chance</h2>
       <div id="predictedResult"></div>
     </div>
 

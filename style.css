@@ -1,8 +1,21 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #000; 
+  color: #fff;
+  overflow-x: hidden;
+}
+
 .mixing-board {
   padding: 40px 0;
   background: #111;
   color: white;
   text-align: center;
+}
+
+.hidden {
+  display: none;
 }
 
 .sliders-container {
@@ -89,7 +102,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   --metal: chrome;
   background: #cfcfcf;
 
-  margin: 0 auto;     
+  margin: 24px auto;     
   display: block;  
 
   transition: 0.22s ease;
@@ -125,8 +138,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .scroll-section {
-  padding: 120px 0;
-  min-height: 100vh;
+  padding: 30px 0;  
+  min-height: 40vh;   
   width: 70%;
   margin: 0 auto;
   opacity: 0;
@@ -221,4 +234,165 @@ body {
   font-size: 1.2rem;
   opacity: 0.85;
   letter-spacing: 1px;
+}
+
+
+.song-card {
+  max-width: 520px;
+  margin: 0 auto 16px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: #18181b;
+  border: 1px solid #27272f;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.song-title {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.song-artist {
+  font-size: 0.9rem;
+  color: #a1a1aa;
+  margin-bottom: 4px;
+}
+
+.song-popularity {
+  font-size: 0.9rem;
+  color: #eab308;
+  margin-bottom: 6px;
+}
+
+.song-note {
+  font-size: 0.9rem;
+  color: #e5e5e5;
+  margin: 0;
+}
+
+.similar-explainer {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+
+.song-link {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: #10b981;
+  border: 1px solid #10b981;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.song-link:hover {
+  background: #10b981;
+  color: #020617;
+}
+
+
+
+.search-container {
+  margin: 20px auto 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* unified search input */
+#songArtistSearchInput {
+  width: 260px;
+  max-width: 80vw;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #444;
+  background: #050509;
+  color: #f9fafb;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+#songArtistSearchInput::placeholder {
+  color: #6b7280;
+}
+
+/* search button style (works for songArtistSearchBtn because of the class) */
+.search-btn {
+  margin-top: 2px;
+  width: 180px;
+  height: 48px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+}
+
+.search-feedback {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  min-height: 1em;
+}
+
+.search-results {
+  margin-top: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 280px;
+  max-width: 80vw;
+}
+
+.search-result-item {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #0b0b12;
+  border: 1px solid #27272f;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-result-item:hover {
+  background: #18181f;
+}
+
+.search-result-title {
+  font-weight: 600;
+}
+
+.search-result-artist {
+  color: #9ca3af;
+}
+
+.search-result-pop {
+  color: #facc15;
+}
+
+.hit-song-info {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #d1d5db;
+  text-align: center;
+}
+
+.predicted-actual {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #d1d5db;
+}
+
+.predicted-actual-number {
+  font-weight: 600;
+  color: #facc15; 
 }

@@ -12,6 +12,16 @@ export const features = [
 export const userValues = {};
 features.forEach(f => userValues[f.id] = f.value);
 
+function formatValue(val, feature) {
+  if (feature.step >= 1) {
+    return Math.round(val).toString(); 
+  } else if (feature.step >= 0.1) {
+    return val.toFixed(1);  
+  } else {
+    return val.toFixed(2); 
+  }
+}
+
 export function createVerticalSliders() {
   const container = document.getElementById("sliders-container");
 
@@ -27,7 +37,8 @@ export function createVerticalSliders() {
         <div class="v-thumb metallicss" id="thumb-${f.id}"></div>
       </div>
 
-      <div class="slider-value" id="val-${f.id}">${f.value}</div>
+      <div class="slider-value" id="val-${f.id}">${formatValue(f.value, f)}</div>
+
     `;
 
     container.appendChild(wrapper);
@@ -80,7 +91,7 @@ function initSlider(feature) {
     y = Math.max(0, Math.min(sliderHeight(), y));
     const newVal = yToValue(y);
     updateThumbPosition(newVal);
-    valueBox.textContent = newVal;
+    valueBox.textContent = formatValue(newVal, feature);
     userValues[feature.id] = newVal;
   }
 
@@ -90,4 +101,28 @@ function initSlider(feature) {
   document.addEventListener("touchmove", updateDrag);
   document.addEventListener("mouseup", stopDrag);
   document.addEventListener("touchend", stopDrag);
+}
+
+
+export function setPresetValues(preset) {
+  features.forEach(feature => {
+    const value = preset[feature.id];
+    if (value == null) return;  
+
+    userValues[feature.id] = value;
+
+    const slider   = document.getElementById(`v-${feature.id}`);
+    const thumb    = document.getElementById(`thumb-${feature.id}`);
+    const valueBox = document.getElementById(`val-${feature.id}`);
+
+    if (!slider || !thumb || !valueBox) return;
+
+    const sliderHeight = slider.getBoundingClientRect().height;
+
+    const pct = (value - feature.min) / (feature.max - feature.min);
+    const y   = sliderHeight * (1 - pct);
+
+    thumb.style.top = `${y - thumb.offsetHeight / 2}px`;
+    valueBox.textContent = formatValue(value, feature);
+  });
 }
