@@ -306,7 +306,6 @@ body {
   gap: 8px;
 }
 
-/* unified search input */
 #songArtistSearchInput {
   width: 260px;
   max-width: 80vw;
@@ -324,7 +323,6 @@ body {
   color: #6b7280;
 }
 
-/* search button style (works for songArtistSearchBtn because of the class) */
 .search-btn {
   margin-top: 2px;
   width: 180px;

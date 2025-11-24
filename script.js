@@ -75,12 +75,12 @@ function closingSummary(p) {
     return "this track is actually a banger but the model under-rates it, that just shows how much things like marketing, fandom, and vibes matter beyond audio features";
   }
 
-  if (p < 0.03) {
+  if (p < 0.02) {
     return "bum ahh song";
-  } else if (p < 0.06) {
-    return "r u deadass";
-  } else if (p < 0.09) {
-    return "it was aight";
+  } else if (p < 0.04) {
+    return "this aight";
+  } else if (p < 0.07) {
+    return "yuhhh";
   } else {
     return "get in the booth cuh ts fire";
   }
