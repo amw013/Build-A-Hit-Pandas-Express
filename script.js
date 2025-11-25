@@ -177,21 +177,44 @@ function renderComparisonViz(values) {
     const row = document.createElement("div");
     row.className = "feature-row";
 
+    // main text + simple bar (what you already had)
     row.innerHTML = `
-      <div class="feature-name">${f.label}</div>
-      <div class="feature-bar-bg">
-        <div class="feature-bar-fill" style="width: ${w}%;"></div>
+      <div class="feature-row-main">
+        <div class="feature-name">${f.label}</div>
+        <div class="feature-bar-bg">
+          <div class="feature-bar-fill" style="width: ${w}%;"></div>
+        </div>
+        <div class="feature-value">${displayVal}</div>
       </div>
-      <div class="feature-value">${displayVal}</div>
+      <!-- per-feature histogram goes here -->
+      <div class="feature-hist"></div>
     `;
 
     container.appendChild(row);
+
+    // draw histogram under this row
+    const histEl = row.querySelector(".feature-hist");
+    renderFeatureHistogramForFeature(f.id, rawVal, histEl);
   });
 }
 //  similar songs 
 
 let songs = [];
 let currentSong = null;
+
+// global tooltip for histograms
+const histTooltip = d3.select("body")
+  .append("div")
+  .attr("class", "hist-tooltip")
+  .style("position", "fixed")
+  .style("pointer-events", "none")
+  .style("background", "#111")
+  .style("color", "#fff")
+  .style("padding", "6px 8px")
+  .style("border-radius", "4px")
+  .style("font-size", "11px")
+  .style("opacity", 0)
+  .style("z-index", 1000);
 
 d3.json("data/spotify_web_subset.json").then(data => {
   songs = data;
@@ -300,6 +323,172 @@ function renderSimilarSongs(mix) {
   container.appendChild(explainer);
 }
 
+
+function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
+  const container = d3.select(containerEl);
+  container.selectAll("*").remove();
+
+  if (!songs.length) return;
+
+  const hitVals = songs
+    .filter(d => Number(d.is_hit) === 1 && d[featureId] != null && !isNaN(+d[featureId]))
+    .map(d => +d[featureId]);
+
+  const nonHitVals = songs
+    .filter(d => Number(d.is_hit) === 0 && d[featureId] != null && !isNaN(+d[featureId]))
+    .map(d => +d[featureId]);
+
+  if (!hitVals.length || !nonHitVals.length) return;
+
+  const allVals = hitVals.concat(nonHitVals);
+
+  const margin = { top: 2, right: 2, bottom: 2, left: 2 };
+  const width  = (containerEl.clientWidth || 260) - margin.left - margin.right;
+  const height = 80 - margin.top - margin.bottom;
+
+  const svg = container.append("svg")
+    .attr("width",  width  + margin.left + margin.right)
+    .attr("height", height + margin.top  + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  // X scale
+  const x = d3.scaleLinear()
+    .domain(d3.extent(allVals))
+    .nice()
+    .range([0, width]);
+
+  const binGen = d3.bin()
+    .domain(x.domain())
+    .thresholds(15);
+
+  const binsNon = binGen(nonHitVals);
+  const binsHit = binGen(hitVals);
+
+  // normalize to proportions so hits are visible
+  binsNon.forEach(b => b.p = b.length / nonHitVals.length);
+  binsHit.forEach(b => b.p = b.length / hitVals.length);
+
+  // find the largest proportion across both groups
+const maxP = d3.max(
+  binsNon.concat(binsHit),
+  b => b.p
+) || 1;
+
+const y = d3.scaleLinear()
+  .domain([0, maxP])   // tallest bar will reach the top
+  .range([height, 0]);
+
+  // helper for tooltip positioning
+  const moveTooltip = (event, html) => {
+    histTooltip
+      .style("opacity", 1)
+      .html(html)
+      .style("left", (event.clientX + 12) + "px")
+      .style("top",  (event.clientY + 12) + "px");
+  };
+
+  // NON-HIT BARS (background)
+  svg.selectAll(".bar-nonhit")
+  .data(binsNon)
+  .enter()
+  .append("rect")
+    .attr("class", "bar-nonhit")
+    .attr("x", d => x(d.x0))
+    .attr("y", d => y(d.p))
+    .attr("width", d => Math.max(0, x(d.x1) - x(d.x0)))
+    .attr("height", d => height - y(d.p))
+    .attr("fill", "#2b2b40")
+    .attr("opacity", 0.4)
+    .on("mouseenter", function (event, d) {
+      d3.select(this)
+        .attr("opacity", 1)
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 0.5);
+
+      moveTooltip(event, `
+        <strong>Non-hit songs</strong><br/>
+        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+        Count: ${d.length}<br/>
+        Share: ${(d.p * 100).toFixed(1)}%
+      `);
+    })
+    .on("mousemove", function (event, d) {
+      // just move tooltip with the mouse
+      moveTooltip(event, `
+        <strong>Non-hit songs</strong><br/>
+        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+        Count: ${d.length}<br/>
+        Share: ${(d.p * 100).toFixed(1)}%
+      `);
+    })
+    .on("mouseleave", function () {
+      d3.select(this)
+        .attr("opacity", 0.4)
+        .attr("stroke", "none");
+
+      histTooltip.style("opacity", 0);
+    });
+
+  // HIT BARS (foreground)
+  svg.selectAll(".bar-hit")
+  .data(binsHit)
+  .enter()
+  .append("rect")
+    .attr("class", "bar-hit")
+    .attr("x", d => x(d.x0) + (x(d.x1) - x(d.x0)) * 0.2)
+    .attr("y", d => y(d.p))
+    .attr("width", d => (x(d.x1) - x(d.x0)) * 0.6)
+    .attr("height", d => height - y(d.p))
+    .attr("fill", "#4b5cff")
+    .attr("opacity", 0.7)
+    .on("mouseenter", function (event, d) {
+      d3.select(this)
+        .attr("opacity", 1)
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 0.7);
+
+      moveTooltip(event, `
+        <strong>Hit songs</strong><br/>
+        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+        Count: ${d.length}<br/>
+        Share: ${(d.p * 100).toFixed(1)}%
+      `);
+    })
+    .on("mousemove", function (event, d) {
+      moveTooltip(event, `
+        <strong>Hit songs</strong><br/>
+        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+        Count: ${d.length}<br/>
+        Share: ${(d.p * 100).toFixed(1)}%
+      `);
+    })
+    .on("mouseleave", function () {
+      d3.select(this)
+        .attr("opacity", 0.7)
+        .attr("stroke", "none");
+
+      histTooltip.style("opacity", 0);
+    });
+
+
+  // YOUR SONG'S VALUE
+  if (typeof mixValue === "number" && !isNaN(mixValue)) {
+    const cx = x(mixValue);
+    if (!isNaN(cx)) {
+      svg.append("line")
+        .attr("x1", cx)
+        .attr("x2", cx)
+        .attr("y1", 0)
+        .attr("y2", height)
+        .attr("stroke", "#ff4b81")
+        .attr("stroke-width", 1.5)
+        .attr("stroke-dasharray", "3,2");
+    }
+  }
+}
+
+
 //  scroll animatinss 
 
 function enableScrollSections() {
@@ -355,44 +544,59 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const alreadyBtn = document.getElementById("alreadyHitBtn");
   if (alreadyBtn) {
-  alreadyBtn.addEventListener("click", () => {
-    const hitSong = pickRandomIsHit();
-    if (!hitSong) {
-      alert("No hit songs (is_hit == 1) found in the dataset.");
-      return;
-    }
+    alreadyBtn.addEventListener("click", () => {
+      const hitSong = pickRandomIsHit();
+      if (!hitSong) {
+        alert("No hit songs (is_hit == 1) found in the dataset.");
+        return;
+      }
 
-    currentSong = hitSong;
+      currentSong = hitSong;
 
-    const saInput     = document.getElementById("songArtistSearchInput");
-    const saFeedback  = document.getElementById("songArtistSearchFeedback");
-    const saResults   = document.getElementById("songArtistSearchResults");
+      const saInput    = document.getElementById("songArtistSearchInput");
+      const saFeedback = document.getElementById("songArtistSearchFeedback");
+      const saResults  = document.getElementById("songArtistSearchResults");
 
-    if (saInput)    saInput.value = "";
-    if (saFeedback) saFeedback.textContent = "";
-    if (saResults)  saResults.innerHTML = "";
+      if (saInput)    saInput.value = "";
+      if (saFeedback) saFeedback.textContent = "";
+      if (saResults)  saResults.innerHTML = "";
 
-    const preset = {
-      tempo:            Number(hitSong.tempo),
-      danceability:     Number(hitSong.danceability),
-      energy:           Number(hitSong.energy),
-      valence:          Number(hitSong.valence),
-      instrumentalness: Number(hitSong.instrumentalness),
-      acousticness:     Number(hitSong.acousticness),
-      loudness:         Number(hitSong.loudness),
-    };
+      const preset = {
+        tempo:            Number(hitSong.tempo),
+        danceability:     Number(hitSong.danceability),
+        energy:           Number(hitSong.energy),
+        valence:          Number(hitSong.valence),
+        instrumentalness: Number(hitSong.instrumentalness),
+        acousticness:     Number(hitSong.acousticness),
+        loudness:         Number(hitSong.loudness),
+      };
 
-    const infoEl = document.getElementById("hitSongInfo");
-    if (infoEl) {
-      const pop = hitSong.track_popularity ?? "N/A";
-      infoEl.textContent =
-        `Using song: ${hitSong.track_name} — ${hitSong.track_artist} (popularity ${pop})`;
-    }
+      const infoEl = document.getElementById("hitSongInfo");
+      if (infoEl) {
+        const pop = hitSong.track_popularity ?? "N/A";
+        infoEl.textContent =
+          `Using song: ${hitSong.track_name} — ${hitSong.track_artist} (popularity ${pop})`;
+      }
 
-    setPresetValues(preset);
-    runModel();
-  });
-}
+      setPresetValues(preset);
+      runModel();
+    });
+  }
+
+  
+  const histExplainBtn   = document.getElementById("histExplainBtn");
+  const histExplainPanel = document.getElementById("histExplainPanel");
+
+  if (histExplainBtn && histExplainPanel) {
+    histExplainBtn.addEventListener("click", () => {
+      const shouldShow = histExplainPanel.classList.contains("hidden");
+      histExplainPanel.classList.toggle("hidden");
+
+      histExplainBtn.textContent = shouldShow
+        ? "Hide explanation"
+        : "What am I looking at?";
+    });
+  }
 
 function applySongToSliders(song) {
   currentSong = song; 

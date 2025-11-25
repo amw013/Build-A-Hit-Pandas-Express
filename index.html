@@ -63,12 +63,39 @@
       <h2>Song’s Hit Chance</h2>
       <div id="predictedResult"></div>
     </div>
-
+    <!-- Result 2: Comparison Histograms -->
     <div class="scroll-section" id="result-2">
       <h2>How Your Song Compares</h2>
       <p>Distribution comparison for each feature.</p>
       <div id="comparisonViz"></div>
+    
+      <!-- Legend + help button -->
+      <div class="hist-legend-row">
+        <div class="hist-legend-items">
+          <span class="legend-box legend-nonhit"></span>
+          <span class="legend-label">Non-hit songs</span>
+    
+          <span class="legend-box legend-hit"></span>
+          <span class="legend-label">Hit songs</span>
+    
+          <span class="legend-line legend-mine"></span>
+          <span class="legend-label">Your song</span>
+        </div>
+    
+        <button id="histExplainBtn" class="hist-explain-btn metallicss">
+          What am I looking at?
+        </button>
+      </div>
+    
+      <div id="histExplainPanel" class="hist-explain-panel hidden">
+        Each tiny chart is a histogram for that feature.
+        The darker bars show how <strong>non-hit songs</strong> are distributed,
+        and the brighter bars show <strong>hit songs</strong>.
+        The dotted pink line marks <strong>your song’s value</strong>, so you can
+        see whether you’re sitting in a typical “hit” region or somewhere else.
+      </div>
     </div>
+    
 
     <div class="scroll-section" id="result-3">
       <h2>Your 3 Most Similar Songs</h2>

@@ -394,3 +394,75 @@ body {
   font-weight: 600;
   color: #facc15; 
 }
+
+.feature-row {
+  margin-bottom: 24px;
+}
+
+.feature-row-main {
+  text-align: center;
+}
+
+.feature-hist {
+  margin-top: 8px;
+}
+
+.hist-legend-row {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hist-legend-items {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.legend-box {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legend-nonhit {
+  background: #2b2b40;   /* same as non-hit bars */
+}
+
+.legend-hit {
+  background: #4b5cff;   /* same as hit bars */
+}
+
+.legend-line {
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed #ff4b81;  /* matches your vertical line color */
+  display: inline-block;
+}
+
+.legend-label {
+  margin-right: 8px;
+}
+
+.hist-explain-btn {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+}
+
+/* explanation panel */
+.hist-explain-panel {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  background: #111217;
+  border-radius: 8px;
+  padding: 10px 12px;
+  max-width: 640px;
+}
+
