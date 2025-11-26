@@ -52,17 +52,17 @@ function describeProbability(p) {
     currentSong.track_popularity >= 80;
 
   if (isRealHit) {
-    return "this already  a hit, the model is just trying to reverse-engineer why it works";
+    return "This already a hit, the model is just trying to reverse-engineer why it works";
   }
 
   if (p < 0.02) {
-    return "idk man this lowkey not it";
+    return "Taste is subjective...";
   } else if (p < 0.04) {
-    return "it lowkey got potential";
+    return "It's got potential!";
   } else if (p < 0.07) {
-    return "this is it";
+    return "This is it.";
   } else {
-    return "holy frick ur cracked";
+    return "Next Song of the Summer!";
   }
 }
 
@@ -72,17 +72,17 @@ function closingSummary(p) {
     currentSong.track_popularity >= 80;
 
   if (isRealHit) {
-    return "this track is actually a banger but the model under-rates it, that just shows how much things like marketing, fandom, and vibes matter beyond audio features";
+    return "This track is actually a banger but the model under-rates it, that just shows how much things like marketing, fandom, and vibes matter beyond audio features";
   }
 
   if (p < 0.02) {
-    return "bum ahh song";
+    return "Missed the mark...";
   } else if (p < 0.04) {
-    return "this aight";
+    return "Let's Try Something Else...";
   } else if (p < 0.07) {
-    return "yuhhh";
+    return "So close to charting!";
   } else {
-    return "get in the booth cuh ts fire";
+    return "We've got ourselves a hit!";
   }
 }
 
