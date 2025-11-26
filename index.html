@@ -28,31 +28,37 @@
 
   <section class="mixing-board">
 
+    
+    <p>Search for an Existing Song</p>
+    <div class="search-container">
+        <input
+            id="songArtistSearchInput"
+            type="text"
+            placeholder="Search by song or artist"
+        />
+        <button id="songArtistSearchBtn" class="search-btn metallicss">
+            SEARCH
+        </button>
+        <div id="songArtistSearchFeedback" class="search-feedback"></div>
+        <div id="songArtistSearchResults" class="search-results"></div>
+    </div>
+
+    <p>Or Randomly Choose a Song from our Dataset</p>
+    <button id="alreadyHitBtn" class="create-btn metallicss">
+      RANDOM HIT SONG
+    </button>
+
+    <p>Or Mix Your Own!</p>
     <h2>Your Mixing Board</h2>
 
     <div class="sliders-container" id="sliders-container">
     </div>
 
-    <div class="search-container">
-    <input
-      id="songArtistSearchInput"
-      type="text"
-      placeholder="Search by song or artist"
-    />
-    <button id="songArtistSearchBtn" class="search-btn metallicss">
-      SEARCH
-    </button>
-    <div id="songArtistSearchFeedback" class="search-feedback"></div>
-    <div id="songArtistSearchResults" class="search-results"></div>
-  </div>
-
     <button id="createSongBtn" class="create-btn metallicss">
       CREATE SONG
     </button>
 
-    <button id="alreadyHitBtn" class="create-btn metallicss">
-      RANDOM HIT SONG
-    </button>
+    
 
     <div id="hitSongInfo" class="hit-song-info"></div>
       
