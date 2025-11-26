@@ -551,6 +551,17 @@ window.addEventListener("DOMContentLoaded", () => {
 };
 
 
+
+  document.getElementById("createSongBtn").addEventListener("click", () => {
+    currentSong = null;
+    const infoEl = document.getElementById("hitSongInfo");
+    if (infoEl) {
+      infoEl.textContent = "";
+    }
+    runModel();
+  });
+
+
   const alreadyBtn = document.getElementById("alreadyHitBtn");
   if (alreadyBtn) {
     alreadyBtn.addEventListener("click", () => {
