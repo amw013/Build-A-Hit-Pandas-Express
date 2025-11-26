@@ -61,29 +61,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 
-/* .create-btn {
-  width: 240px;
-  height: 80px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 1px;
-  color: white;
-  font-weight: 700;
-
-  --convexity: 2.5;       
-  --metal: chrome;        
-  background: #cfcfcf;     
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  transition: 0.22s ease;
-} */
 
 .create-btn {
   width: 240px;
@@ -405,6 +382,9 @@ body {
 
 .feature-hist {
   margin-top: 8px;
+  width: 260px;    
+  height: 80px;   
+  display: inline-block;
 }
 
 .hist-legend-row {

@@ -216,11 +216,17 @@ const histTooltip = d3.select("body")
   .style("opacity", 0)
   .style("z-index", 1000);
 
-d3.json("data/spotify_web_subset.json").then(data => {
+let songsPromise = d3.json("data/spotify_web_subset.json").then(data => {
   songs = data;
   console.log("Loaded songs:", songs.length);
   console.log("First song example:", songs[0]);
+  return songs;
+}).catch(err => {
+  console.error("Failed to load songs JSON:", err);
+  songs = [];
+  return songs;
 });
+
 
 function findSongsByQuery(query) {
   if (!songs.length) return [];
@@ -343,7 +349,8 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
   const allVals = hitVals.concat(nonHitVals);
 
   const margin = { top: 2, right: 2, bottom: 2, left: 2 };
-  const width  = (containerEl.clientWidth || 260) - margin.left - margin.right;
+  const measured = containerEl.clientWidth;
+  const width  = (measured && measured > 10 ? measured : 260) - margin.left - margin.right;
   const height = 80 - margin.top - margin.bottom;
 
   const svg = container.append("svg")
@@ -519,28 +526,30 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const results = document.getElementById("results");
 
-  const runModel = () => {
-    results.classList.remove("hidden");
+  const runModel = async () => {
+  results.classList.remove("hidden");
 
-    const mix = { ...userValues };
-    const prob = computeHitProbability(mix);
+  const mix = { ...userValues };
+  const prob = computeHitProbability(mix);
 
-    renderPredictedResult(prob);
+  renderPredictedResult(prob);
+
+  await songsPromise;
+
+  if (!songs.length) {
+    const container = document.getElementById("comparisonViz");
+    if (container) {
+      container.innerHTML = "<p style='color:#ddd'>Data still loading or failed to load — try again in a second.</p>";
+    }
+  } else {
     renderComparisonViz(mix);
     renderSimilarSongs(mix);
+  }
 
-    gsap.to(results, { opacity: 1, duration: 0.6 });
-    enableScrollSections();
-  };
+  gsap.to(results, { opacity: 1, duration: 0.6 });
+  enableScrollSections();
+};
 
-  document.getElementById("createSongBtn").addEventListener("click", () => {
-    currentSong = null;
-    const infoEl = document.getElementById("hitSongInfo");
-    if (infoEl) {
-      infoEl.textContent = "";
-    }
-    runModel();
-  });
 
   const alreadyBtn = document.getElementById("alreadyHitBtn");
   if (alreadyBtn) {
