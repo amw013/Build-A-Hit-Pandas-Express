@@ -20,9 +20,14 @@
 
 
   <header class="hero">
-    <h1>Build a Hit Song</h1>
-    <p>What Features Make Songs Popular?</p>
-  </header>
+  <img
+    class="hero-logo"
+    src="images/spotify-logo.png"
+    alt="Spotify logo"
+  />
+  <h1>Build a Hit Song</h1>
+  <p>What Features Make Songs Popular?</p>
+</header>
 
 
 
@@ -58,6 +63,25 @@
     <button id="createSongBtn" class="create-btn metallicss">
       CREATE SONG
     </button>
+    <div class="hint-wrapper">
+    <button id="hintToggle" class="hint-toggle">
+      Need a hint?
+    </button>
+
+    <div id="hintPanel" class="hint-panel hidden">
+      Our model says hit songs in this dataset tend to be:
+      <ul>
+        <li>More <b>danceable</b> and a bit <b>louder</b> (closer to 0 dB)</li>
+        <li>Less <b>instrumental</b> and slightly lower in <b>valence</b></li>
+        <li><b>Tempo</b> a bit above average, with <b>energy</b> not maxed out</li>
+        <li>Somewhat higher <b>acousticness</b></li>
+      </ul>
+      Moving sliders in those directions usually increases the hit probability
+      <b>but only according to our simple model trained on this dataset</b>.
+      Real world hits still depend on hype, timing, and luck.
+    </div>
+    </div>
+
     <p>Then Scroll for Results</p>
     <p>⌄</p>
 

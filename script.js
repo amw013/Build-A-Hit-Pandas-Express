@@ -708,4 +708,19 @@ function applySongToSliders(song) {
       }
     });
   }
+  const hintToggle = document.getElementById("hintToggle");
+  const hintPanel  = document.getElementById("hintPanel");
+
+  if (hintToggle && hintPanel) {
+    hintToggle.addEventListener("click", () => {
+      const isHidden = hintPanel.classList.contains("hidden");
+      if (isHidden) {
+        hintPanel.classList.remove("hidden");
+        hintToggle.textContent = "Hide hint";
+      } else {
+        hintPanel.classList.add("hidden");
+        hintToggle.textContent = "Need a hint?";
+      }
+    });
+  }
 });

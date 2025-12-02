@@ -446,3 +446,91 @@ body {
   max-width: 640px;
 }
 
+.hint-wrapper {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.hint-toggle {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.hint-toggle:hover {
+  color: #e5e7eb;
+}
+
+.hint-panel {
+  margin-top: 8px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  text-align: left;
+  line-height: 1.4;
+  background: #050509;
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid #27272f;
+}
+
+.hint-panel ul {
+  margin: 6px 0 6px 18px;
+  padding: 0;
+}
+
+.hint-panel li {
+  margin-bottom: 3px;
+}
+
+.hero {
+  background: #000;
+  color: white;
+  text-align: center;
+  padding: 120px 20px 100px;
+  font-family: 'Montserrat', sans-serif;
+  border-bottom: 2px solid #222;
+  position: relative;      
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  opacity: 0.85;
+  letter-spacing: 1px;
+}
+
+.hero-logo {
+  position: absolute;
+  left: 75px;  
+  top: 50%;
+  transform: translateY(-50%);
+  height: 300px;   
+  width: auto;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 100px;
+  }
+
+  .hero-logo {
+    position: static;
+    transform: none;
+    display: block;
+    margin: 0 auto 16px;
+    height: 56px;
+  }
+}
