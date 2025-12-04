@@ -103,9 +103,18 @@
     <!-- Result 2: Comparison Histograms -->
     <div class="scroll-section" id="result-2">
       <h2>How Your Song Compares</h2>
-      <p>Distribution comparison for each feature.</p>
+      <!-- <p>Distribution comparison for each feature.</p> -->
+      <div class="hist-toggle">
+        <label><input type="radio" name="histMode" value="all" checked> All songs</label>
+        <label><input type="radio" name="histMode" value="hit"> Hit songs only</label>
+        <label><input type="radio" name="histMode" value="both"> Compare both</label>
+      </div>
+      <br>
+      <br>
       <div id="comparisonViz"></div>
     
+      
+
       <!-- Legend + help button -->
       <div class="hist-legend-row">
         <div class="hist-legend-items">

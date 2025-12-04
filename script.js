@@ -5,6 +5,9 @@ gsap.registerPlugin(ScrollTrigger);
 
 console.log("script.js loaded");
 
+let histogramMode = "all";  
+
+
 function logistic(score) {
   return 1 / (1 + Math.exp(-score));
 }
@@ -195,6 +198,8 @@ function renderComparisonViz(values) {
     // draw histogram under this row
     const histEl = row.querySelector(".feature-hist");
     renderFeatureHistogramForFeature(f.id, rawVal, histEl);
+
+    
   });
 }
 //  similar songs 
@@ -338,20 +343,38 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
 
   const hitVals = songs
     .filter(d => Number(d.is_hit) === 1 && d[featureId] != null && !isNaN(+d[featureId]))
-    .map(d => +d[featureId]);
+    .map(d => +d[featureId])
+    .filter(v => !isNaN(v));
 
   const nonHitVals = songs
     .filter(d => Number(d.is_hit) === 0 && d[featureId] != null && !isNaN(+d[featureId]))
-    .map(d => +d[featureId]);
-
-  if (!hitVals.length || !nonHitVals.length) return;
+    .map(d => +d[featureId])
+    .filter(v => !isNaN(v));
 
   const allVals = hitVals.concat(nonHitVals);
 
-  const margin = { top: 2, right: 2, bottom: 2, left: 2 };
-  const measured = containerEl.clientWidth;
-  const width  = (measured && measured > 10 ? measured : 260) - margin.left - margin.right;
-  const height = 80 - margin.top - margin.bottom;
+
+  if (!hitVals.length || !nonHitVals.length) return;
+
+  let datasetA = [];
+  let datasetB = [];
+
+  if (histogramMode === "all") {
+    datasetA = allVals;     // one histogram only
+    datasetB = null;
+  } else if (histogramMode === "hit") {
+    datasetA = hitVals;     // hits only
+    datasetB = null;
+  } else if (histogramMode === "both") {
+    datasetA = nonHitVals;  // base layer
+    datasetB = hitVals;     // overlay
+  }
+
+  // const allVals = hitVals.concat(nonHitVals);
+  
+  const margin = { top: 5, right: 5, bottom: 5, left: 5 };
+  const width  = (containerEl.clientWidth || 260) - margin.left - margin.right;
+  const height = 100 - margin.top - margin.bottom;
 
   const svg = container.append("svg")
     .attr("width",  width  + margin.left + margin.right)
@@ -359,9 +382,8 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // X scale
   const x = d3.scaleLinear()
-    .domain(d3.extent(allVals))
+    .domain(d3.extent(datasetA))   // base domain from datasetA
     .nice()
     .range([0, width]);
 
@@ -369,24 +391,16 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
     .domain(x.domain())
     .thresholds(15);
 
-  const binsNon = binGen(nonHitVals);
-  const binsHit = binGen(hitVals);
+  const binsA = binGen(datasetA).map(b => ({ ...b, p: b.length / datasetA.length }));
+  const binsB = datasetB ? binGen(datasetB).map(b => ({ ...b, p: b.length / datasetB.length })) : [];
 
-  // normalize to proportions so hits are visible
-  binsNon.forEach(b => b.p = b.length / nonHitVals.length);
-  binsHit.forEach(b => b.p = b.length / hitVals.length);
+  const maxP = d3.max(
+    datasetB ? binsA.concat(binsB) : binsA,
+    b => b.p
+  ) || 1;
 
-  // find the largest proportion across both groups
-const maxP = d3.max(
-  binsNon.concat(binsHit),
-  b => b.p
-) || 1;
+  const y = d3.scaleLinear().domain([0, maxP]).range([height, 0]);
 
-const y = d3.scaleLinear()
-  .domain([0, maxP])   // tallest bar will reach the top
-  .range([height, 0]);
-
-  // helper for tooltip positioning
   const moveTooltip = (event, html) => {
     histTooltip
       .style("opacity", 1)
@@ -394,92 +408,98 @@ const y = d3.scaleLinear()
       .style("left", (event.clientX + 12) + "px")
       .style("top",  (event.clientY + 12) + "px");
   };
+  // -------- A LAYER ----------
+  svg.selectAll(".bar-A")
+    .data(binsA)
+    .enter().append("rect")
+      .attr("class", "bar-A")
+      .attr("x", d => x(d.x0))
+      .attr("y", d => y(d.p))
+      .attr("width", d => Math.max(0, x(d.x1) - x(d.x0)))
+      .attr("height", d => height - y(d.p))
+      .attr("fill", histogramMode === "hit" ? "#ff4faa" :
+                    histogramMode === "all" ? "#5fb2ffff" : "#145ea3ff")
+      .attr("opacity", histogramMode === "both" ? 0.7 : 0.7)
+      .on("mouseenter", function (event, d) {
+        d3.select(this)
+          .attr("opacity", 1)
+          .attr("stroke", "#ffffff")
+          .attr("stroke-width", 0.5);
 
-  // NON-HIT BARS (background)
-  svg.selectAll(".bar-nonhit")
-  .data(binsNon)
-  .enter()
-  .append("rect")
-    .attr("class", "bar-nonhit")
-    .attr("x", d => x(d.x0))
-    .attr("y", d => y(d.p))
-    .attr("width", d => Math.max(0, x(d.x1) - x(d.x0)))
-    .attr("height", d => height - y(d.p))
-    .attr("fill", "#2b2b40")
-    .attr("opacity", 0.4)
-    .on("mouseenter", function (event, d) {
-      d3.select(this)
-        .attr("opacity", 1)
-        .attr("stroke", "#ffffff")
-        .attr("stroke-width", 0.5);
+        moveTooltip(event, `
+          <strong>All songs</strong><br/>
+          Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+          Count: ${d.length}<br/>
+          Share: ${(d.p * 100).toFixed(1)}%
+        `);
+      })
+      .on("mousemove", function (event, d) {
+        // just move tooltip with the mouse
+        moveTooltip(event, `
+          <strong>All songs</strong><br/>
+          Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+          Count: ${d.length}<br/>
+          Share: ${(d.p * 100).toFixed(1)}%
+        `);
+      })
+      .on("mouseleave", function () {
+        d3.select(this)
+          .attr("opacity", histogramMode === "both" ? 0.7 : 0.7)
+          .attr("stroke", "none")
+          .attr("fill", histogramMode === "hit" ? "#ff4faa" :
+                        histogramMode === "all" ? "#5fb2ffff" : "#145ea3ff");
 
-      moveTooltip(event, `
-        <strong>Non-hit songs</strong><br/>
-        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
-        Count: ${d.length}<br/>
-        Share: ${(d.p * 100).toFixed(1)}%
-      `);
-    })
-    .on("mousemove", function (event, d) {
-      // just move tooltip with the mouse
-      moveTooltip(event, `
-        <strong>Non-hit songs</strong><br/>
-        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
-        Count: ${d.length}<br/>
-        Share: ${(d.p * 100).toFixed(1)}%
-      `);
-    })
-    .on("mouseleave", function () {
-      d3.select(this)
-        .attr("opacity", 0.4)
-        .attr("stroke", "none");
 
-      histTooltip.style("opacity", 0);
-    });
+        histTooltip.style("opacity", 0);
+      });
 
-  // HIT BARS (foreground)
-  svg.selectAll(".bar-hit")
-  .data(binsHit)
-  .enter()
-  .append("rect")
-    .attr("class", "bar-hit")
-    .attr("x", d => x(d.x0) + (x(d.x1) - x(d.x0)) * 0.2)
-    .attr("y", d => y(d.p))
-    .attr("width", d => (x(d.x1) - x(d.x0)) * 0.6)
-    .attr("height", d => height - y(d.p))
-    .attr("fill", "#4b5cff")
-    .attr("opacity", 0.7)
-    .on("mouseenter", function (event, d) {
-      d3.select(this)
-        .attr("opacity", 1)
-        .attr("stroke", "#ffffff")
-        .attr("stroke-width", 0.7);
-
-      moveTooltip(event, `
-        <strong>Hit songs</strong><br/>
-        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
-        Count: ${d.length}<br/>
-        Share: ${(d.p * 100).toFixed(1)}%
-      `);
-    })
-    .on("mousemove", function (event, d) {
-      moveTooltip(event, `
-        <strong>Hit songs</strong><br/>
-        Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
-        Count: ${d.length}<br/>
-        Share: ${(d.p * 100).toFixed(1)}%
-      `);
-    })
-    .on("mouseleave", function () {
-      d3.select(this)
+  // --------- OPTIONAL B OVERLAY ----------
+  if (datasetB) {
+    svg.selectAll(".bar-B")
+      .data(binsB)
+      .enter().append("rect")
+        .attr("class", "bar-B")
+        .attr("x", d => x(d.x0))
+        .attr("y", d => y(d.p))
+        .attr("width", d => Math.max(0, x(d.x1) - x(d.x0)))
+        .attr("height", d => height - y(d.p))
+        .attr("fill", "#ff4faa")
         .attr("opacity", 0.7)
-        .attr("stroke", "none");
+        .on("mouseenter", function (event, d) {
+          d3.select(this)
+            .attr("opacity", 1)
+            .attr("stroke", "#ffffff")
+            .attr("stroke-width", 0.7);
 
-      histTooltip.style("opacity", 0);
-    });
+          moveTooltip(event, `
+            <strong>Hit songs</strong><br/>
+            Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+            Count: ${d.length}<br/>
+            Share: ${(d.p * 100).toFixed(1)}%
+          `);
+        })
+        .on("mousemove", function (event, d) {
+          moveTooltip(event, `
+            <strong>Hit songs</strong><br/>
+            Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
+            Count: ${d.length}<br/>
+            Share: ${(d.p * 100).toFixed(1)}%
+          `);
+        })
+        .on("mouseleave", function () {
+          d3.select(this)
+            .attr("opacity", 0.7)
+            .attr("stroke", "none")
+            .attr("fill", "#ff4faa");
 
 
-  // YOUR SONG'S VALUE
+          histTooltip.style("opacity", 0);
+        });
+  }
+
+
+
+
   if (typeof mixValue === "number" && !isNaN(mixValue)) {
     const cx = x(mixValue);
     if (!isNaN(cx)) {
@@ -488,7 +508,7 @@ const y = d3.scaleLinear()
         .attr("x2", cx)
         .attr("y1", 0)
         .attr("y2", height)
-        .attr("stroke", "#ff4b81")
+        .attr("stroke", "#ffffff")
         .attr("stroke-width", 1.5)
         .attr("stroke-dasharray", "3,2");
     }
@@ -524,12 +544,43 @@ window.addEventListener("DOMContentLoaded", () => {
   console.log("DOM fully loaded");
   createVerticalSliders();
 
+  let currentSongValues = null;
+
+  
+
+  // document.getElementById("all").onclick = () => {
+  //   histogramMode = "all";
+  //   renderComparisonViz(currentSongValues ?? userValues);
+  // };
+
+  // document.getElementById("hit").onclick = () => {
+  //   histogramMode = "hit";
+  //   renderComparisonViz(currentSongValues ?? userValues);
+  // };
+
+  // document.getElementById("both").onclick = () => {
+  //   histogramMode = "both";
+  //   renderComparisonViz(currentSongValues ?? userValues);
+  // };
+
+
   const results = document.getElementById("results");
 
   const runModel = async () => {
   results.classList.remove("hidden");
 
   const mix = { ...userValues };
+  currentSongValues = mix;
+
+  document.querySelectorAll("input[name='histMode']").forEach(radio => {
+    radio.addEventListener("change", e => {
+      histogramMode = e.target.value;
+      console.log("Radio changed to:", e.target.value);
+      console.log(currentSongValues);
+      renderComparisonViz(currentSongValues); 
+    });
+  });
+  
   const prob = computeHitProbability(mix);
 
   renderPredictedResult(prob);
@@ -724,3 +775,5 @@ function applySongToSliders(song) {
     });
   }
 });
+
+
