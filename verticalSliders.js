@@ -9,6 +9,17 @@ export const features = [
   { id: "loudness", label: "Loudness (dB)", min: -20, max: 0, step: 0.1, value: -6 },
 ];
 
+export const featureInfo = {
+  tempo: "the speed or pace of a given piece (in BPM)",
+  danceability: "how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity",
+  energy: "a perceptual measure of intensity and activity based on features like dynamic range, perceived loudness, timbre, onset rate, and general entropy",
+  valence: "musical positiveness conveyed by a track (high valence songs sound more happy, cheerful, euphoric)",
+  instrumentalness: "likelihood that a track contains no vocals",
+  acousticness: "likelihood that a track is acoustic",
+  loudness: "overall loudness of a track in decibels (dB)."
+};
+
+
 export const userValues = {};
 features.forEach(f => userValues[f.id] = f.value);
 
@@ -30,7 +41,11 @@ export function createVerticalSliders() {
     wrapper.className = "slider-wrapper";
 
     wrapper.innerHTML = `
-      <div class="slider-label">${f.label}</div>
+      <div class="slider-label">
+        ${f.label}
+        <br>
+        <span class="info-icon" data-tooltip="${featureInfo[f.id] || ''}">ⓘ</span>
+      </div>
 
       <div class="v-slider" id="v-${f.id}">
         <div class="v-track"></div>

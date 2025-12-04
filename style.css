@@ -534,3 +534,35 @@ body {
     height: 56px;
   }
 }
+
+.info-icon {
+  display: inline-block;
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #bbb;
+  padding: 2px 4px;
+  border-radius: 50%;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.info-icon:hover {
+  color: white;
+}
+
+.info-icon:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 18px;
+  top: -4px;
+  background: black;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 220px;
+  white-space: normal;
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
