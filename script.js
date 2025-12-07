@@ -9,14 +9,80 @@ let histogramMode = "all";
 let radarChart = null;
 let similarRadarChart = null;
 
-let featureImportanceChart = null;  // put this near your other globals
+let featureImportanceChart = null;  
+
+function setupProgressDots() {
+  const dots = Array.from(document.querySelectorAll(".progress-dot"));
+  if (!dots.length) return;
+
+  // Map sectionId -> {sectionEl, dotEl}
+  const sectionMap = {};
+  dots.forEach(dot => {
+    const sectionId = dot.dataset.sectionId;
+    const sectionEl = document.getElementById(sectionId);
+    if (sectionEl) {
+      sectionMap[sectionId] = { section: sectionEl, dot };
+    }
+  });
+
+  // Click = scroll to that section
+  dots.forEach(dot => {
+    dot.addEventListener("click", () => {
+      const sectionId = dot.dataset.sectionId;
+      const entry = sectionMap[sectionId];
+      if (entry && entry.section) {
+        entry.section.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    });
+  });
+
+  // Helper to update .active dot
+  function setActiveDot(sectionId) {
+    dots.forEach(dot => {
+      dot.classList.toggle("active", dot.dataset.sectionId === sectionId);
+    });
+  }
+
+  // Observe which section is in view
+  const observer = new IntersectionObserver(
+    (entries) => {
+      // Find the entry whose center is most visible
+      let best = null;
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        if (!best || entry.intersectionRatio > best.intersectionRatio) {
+          best = entry;
+        }
+      });
+
+      if (best && best.target.id) {
+        setActiveDot(best.target.id);
+      }
+    },
+    {
+      threshold: [0.3, 0.6], // triggers when ~1/3–2/3 of it is in view
+    }
+  );
+
+  // Attach observer to each section we care about
+  Object.values(sectionMap).forEach(({ section }) => observer.observe(section));
+}
+
+// Call this when DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  setupProgressDots();
+});
+
+
 
 function initFeatureImportanceChart() {
   const canvasEl = document.getElementById("featureImportanceChart");
   if (!canvasEl || typeof Chart === "undefined") return;
 
-  // Numbers derived from the simple model, but we'll talk about them
-  // as "tendencies" we see in the dataset.
+  // Numbers derived from the simple model,
   const coeffs = {
     danceability:  1.659327,
     energy:       -4.149053,
@@ -1349,6 +1415,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Landing: feature-importance chart
   initFeatureImportanceChart();
+  setupProgressDots();
 
   const getStartedBtn = document.getElementById("getStartedBtn");
   const dataExplorer  = document.getElementById("data-explorer");

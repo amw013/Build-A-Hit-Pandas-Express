@@ -26,8 +26,20 @@
 
 <body>
 
+  
+<nav class="progress-dots">
+  <button class="progress-dot active" data-section-id="hero" aria-label="Intro"></button>
+  <button class="progress-dot" data-section-id="data-explorer" aria-label="Explore dataset"></button>
+  <button class="progress-dot" data-section-id="hitmaker" aria-label="Mixing board"></button>
+  <button class="progress-dot" data-section-id="result-1" aria-label="Hit chance"></button>
+  <button class="progress-dot" data-section-id="result-2" aria-label="Histograms"></button>
+  <button class="progress-dot" data-section-id="result-3" aria-label="Similar songs"></button>
+  <button class="progress-dot" data-section-id="result-4" aria-label="Verdict"></button>
+</nav>
 
-  <header class="hero">
+
+
+  <header class="hero" id="hero">
     <img
       class="hero-logo"
       src="images/spotify-logo.png"
@@ -121,10 +133,8 @@
         </div>
       </div>
       <p class="feature-story-lead">
-        Before you start mixing your own track, you can explore patterns in the Spotify
-        songs we used. On the left, you’ll see which audio features tend to show up
-        more in popular songs. On the right, you can filter the dataset and compare
-        average feature profiles.
+        Before you start mixing your own track, you can also explore what features are
+        essential to make a hit, using songs from our dataset.
       </p>
     
       <div class="data-explorer-layout">
@@ -155,7 +165,7 @@
 
 
 
-<section class="mixing-board hidden">
+<section id = "hitmaker" class="mixing-board hidden">
 
     
   <br>
