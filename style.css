@@ -521,13 +521,22 @@ body {
   letter-spacing: 1px;
 }
 
+.hero {
+  background: #000;
+  color: white;
+  text-align: center;
+  padding: 60px 20px 40px;   /* less vertical padding */
+  font-family: 'Montserrat', sans-serif;
+  border-bottom: 2px solid #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .hero-logo {
-  position: absolute;
-  left: 75px;  
-  top: 50%;
-  transform: translateY(-50%);
-  height: 300px;   
-  width: auto;
+  width: 500px;    /* much smaller */
+  height: auto;
+  margin-bottom: 0.02rem;
 }
 
 @media (max-width: 640px) {
@@ -929,3 +938,224 @@ body {
 #genreFilter{
   margin-bottom: 15px;
 }
+
+.hero-subtext {
+  max-width: 560px;
+  margin: 0.75rem auto 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.hero-cta {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.hero-steps {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.hero-step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 220px;
+}
+
+.hero-step-label {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  border: 1px solid #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.data-explorer-panel {
+  background: radial-gradient(circle at top, #020617, #000 65%);
+  border-radius: 22px;
+  padding: 2.2rem 2.4rem;
+  border: 1px solid rgba(148,163,184,0.18);
+  box-shadow:
+    0 30px 70px rgba(15,23,42,0.75),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  margin-bottom: 3rem;
+}
+
+.data-explorer-panel h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.feature-story-note {
+  margin: 0.5rem auto 1.6rem;
+  max-width: 520px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* === Data explorer layout === */
+#data-explorer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 60px 20px 40px;
+}
+
+#data-explorer h2 {
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+}
+
+.feature-story-lead {
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+  font-size: 0.95rem;
+  color: #d1d5db;
+  line-height: 1.6;
+}
+
+/* Card wrapper for filters + radar */
+#radarChartContainer {
+  margin-top: 24px;
+}
+
+/* === Filter bar === */
+#exploreControls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.explore-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-width: 260px;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+}
+
+.explore-field label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.explore-field select,
+.explore-field input[type="text"] {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  background: radial-gradient(circle at top, #020617, #030712);
+  color: #f9fafb;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.explore-field select:focus,
+.explore-field input[type="text"]:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 1px #f97316;
+}
+
+
+
+
+
+
+
+/* Duration slider row */
+.slider-container {
+  margin-top: 6px;
+}
+
+#duration-slider {
+  width: 100%;
+  margin-top: 6px;
+}
+
+#duration-display {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+
+/* Card around the radar itself */
+#radarChartContainer {
+  max-width: 640px;
+  margin: 0 auto;
+  background: radial-gradient(circle at top, #020617, #020617 55%, #000 100%);
+  padding: 24px 22px 30px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow:
+    0 18px 50px rgba(0,0,0,0.75),
+    0 0 0 1px rgba(15,23,42,0.7);
+}
+
+.data-explorer-cta {
+  margin: 3.5rem auto 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+/* subtle divider glow above button */
+.data-explorer-cta::before {
+  content: "";
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(236, 72, 153, 0.6),
+    transparent
+  );
+  margin-bottom: 1.25rem;
+  display: block;
+}
+
+.data-explorer-cta .hero-cta {
+  font-size: 1rem;
+  padding: 0.85rem 2.2rem;
+  border-radius: 999px;
+  box-shadow:
+    0 10px 35px rgba(236, 72, 153, 0.45),
+    0 0 0 1px rgba(236, 72, 153, 0.4);
+}
+
+.data-explorer-cta-help {
+  max-width: 520px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #9ca3af;
+}
+
+

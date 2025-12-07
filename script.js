@@ -9,6 +9,148 @@ let histogramMode = "all";
 let radarChart = null;
 let similarRadarChart = null;
 
+let featureImportanceChart = null;  // put this near your other globals
+
+function initFeatureImportanceChart() {
+  const canvasEl = document.getElementById("featureImportanceChart");
+  if (!canvasEl || typeof Chart === "undefined") return;
+
+  // Numbers derived from the simple model, but we'll talk about them
+  // as "tendencies" we see in the dataset.
+  const coeffs = {
+    danceability:  1.659327,
+    energy:       -4.149053,
+    valence:      -0.227540,
+    acousticness:  0.620608,
+    instrumentalness: -2.400515,
+    speechiness:  0.410292,
+    tempo:        0.118565,   // relative to average tempo
+    loudness:     0.901055    // relative to average loudness
+  };
+
+  const labels = [
+    "Danceability",
+    "Energy",
+    "Valence",
+    "Acousticness",
+    "Instrumentalness",
+    "Speechiness",
+    "Tempo (relative)",
+    "Loudness (relative)"
+  ];
+
+  const rawKeys = [
+    "danceability",
+    "energy",
+    "valence",
+    "acousticness",
+    "instrumentalness",
+    "speechiness",
+    "tempo",
+    "loudness"
+  ];
+
+  const dataVals = rawKeys.map(k => coeffs[k]);
+
+  const bgColors = dataVals.map(v =>
+    v >= 0 ? "rgba(0, 200, 255, 0.4)" : "rgba(255, 99, 132, 0.4)"
+  );
+  const borderColors = dataVals.map(v =>
+    v >= 0 ? "rgba(0, 200, 255, 1)" : "rgba(255, 99, 132, 1)"
+  );
+
+  // Destroy any previous instance
+  if (featureImportanceChart) {
+    featureImportanceChart.destroy();
+  }
+
+  featureImportanceChart = new Chart(canvasEl, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Tendency toward more popular songs (dataset pattern)",
+        data: dataVals,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      scales: {
+        x: {
+          grid: { color: "#333" },
+          ticks: {
+            color: "#f9fafb",
+            callback: (val) => val
+          },
+          title: {
+            display: true,
+            text: "Leans toward ← less popular · more popular → (in this dataset)",
+            color: "#f9fafb",
+            font: { size: 11 }
+          }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: "#f9fafb" }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const label = ctx.label || "";
+              const value = ctx.parsed.x;
+              const morePopular = value >= 0;
+
+              const directionText = morePopular
+                ? "shows up more often in popular songs in this dataset."
+                : "is more common in the less-popular songs here.";
+
+              const explanations = {
+                "Danceability":
+                  "More danceable tracks tend to be over-represented among the popular songs.",
+                "Energy":
+                  "Extremely high-energy tracks tilt a bit more toward the less-popular side in this snapshot.",
+                "Valence":
+                  "Happier-sounding songs (high valence) are slightly less typical among the biggest tracks here.",
+                "Acousticness":
+                  "Songs with more acoustic texture show up a bit more often among popular tracks.",
+                "Instrumentalness":
+                  "Highly instrumental tracks are more common on the less-popular side.",
+                "Speechiness":
+                  "Tracks with more spoken-word / rap-like qualities appear more in popular songs.",
+                "Tempo (relative)":
+                  "Being a bit faster than average is more often a trait of popular songs.",
+                "Loudness (relative)":
+                  "Louder masters tend to be more represented among popular tracks in this dataset."
+              };
+
+              const prettyVal = value.toFixed(3);
+              const expl = explanations[label] || "";
+
+              return [
+                `${label}: ${prettyVal}`,
+                `${label} ${directionText}`,
+                expl
+              ];
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+
+
+
 
 
 function logistic(score) {
@@ -998,40 +1140,39 @@ function setupEventListeners() {
     });
   }
 
-  // DURATION SLIDER
+  // DURATION SLIDER (top explorer: id="durationSlider")
   const slider = document.getElementById("duration-slider");
-
-    // Create the noUiSlider
-  noUiSlider.create(slider, {
-    start: [0, 300],        // 0:00 to 5:00
-    connect: true,
-    range: {
+  if (slider) {
+    noUiSlider.create(slider, {
+      start: [0, 300],        // 0s to 5:00
+      connect: true,
+      range: {
         min: 0,
-        max: 300           // total seconds
-    },
-    step: 1,                // 1 second increments
-    tooltips: false
-  });
+        max: 300             // seconds
+      },
+      step: 1,
+      tooltips: false
+    });
 
-  const display = document.getElementById("duration-display");
+    const display = document.getElementById("duration-display");
+    if (display) {
+      // Update text display live
+      slider.noUiSlider.on("update", (values) => {
+        const minSec = formatMMSS(parseInt(values[0]));
+        const maxSec = formatMMSS(parseInt(values[1]));
+        display.textContent = `${minSec} — ${maxSec}`;
+      });
+    }
 
-    // Update text display live
-  slider.noUiSlider.on("update", function(values) {
-    const minSec = formatMMSS(parseInt(values[0]));
-    const maxSec = formatMMSS(parseInt(values[1]));
-    display.textContent = `${minSec} — ${maxSec}`;
-  });
-
-    // Send cleaned filter values to your visualization
-  slider.noUiSlider.on("set", function(values) {
-
-    radarFilters.durationMin = parseInt(values[0]);
-    radarFilters.durationMax = parseInt(values[1])
-
-    // console.log('lol', radarFilters)
-
-    updateRadar(radarFilters);  // <--- your filtering function
-  });
+    // Update filters when the user is done sliding
+    slider.noUiSlider.on("set", (values) => {
+      radarFilters.durationMin = parseInt(values[0]);  // seconds
+      radarFilters.durationMax = parseInt(values[1]);  // seconds
+      updateRadar(radarFilters);
+    });
+  } else {
+    console.warn("durationSlider element not found, skipping noUiSlider setup.");
+  }
 
   // POPULARITY FILTER
   const popSlider = document.getElementById("popFilter");
@@ -1052,60 +1193,53 @@ function setupEventListeners() {
   const aInput = document.getElementById("artistFilter");
   const aBtn = document.getElementById("ArtistSearchBtn");
 
-  if (aBtn) {
+  if (aBtn && aInput) {
     aBtn.addEventListener("click", () => handleArtistSearch(aInput.value));
-  }
-
-  if (aInput) {
     aInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") handleArtistSearch(aInput.value);
     });
   }
 
-  document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+  // RESET FILTERS BUTTON
+  const resetBtn = document.getElementById("resetFiltersBtn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      console.log("Resetting all filters...");
 
-    console.log("Resetting all filters...");
+      // Reset radarFilters
+      radarFilters.genre = null;
+      radarFilters.artist = null;
+      radarFilters.durationMin = null;
+      radarFilters.durationMax = null;
+      radarFilters.popularityMin = null;
+      radarFilters.popularityMax = null;
 
-    // --- RESET FILTER OBJECT ---
-    radarFilters.genre = null;
-    radarFilters.artist = null;
-    radarFilters.minDurationSec = null;
-    radarFilters.maxDurationSec = null;
-    radarFilters.popularityMin = null;
-    radarFilters.popularityMax = null;
+      // Genre dropdown
+      if (genreSelectEl) genreSelectEl.value = "all";
 
-    // --- RESET DOM ELEMENTS ---
+      // Artist input + results
+      const artistInput = document.getElementById("artistFilter");
+      if (artistInput) artistInput.value = "";
+      const artistResults = document.getElementById("ArtistSearchResults");
+      if (artistResults) artistResults.innerHTML = "";
+      const feedback = document.getElementById("ArtistSearchFeedback");
+      if (feedback) feedback.textContent = "";
 
-    // Genre dropdown
-    const genreSelect = document.getElementById("genreFilter");
-    if (genreSelect) genreSelect.value = "";
+      // Popularity range
+      if (popSlider) popSlider.value = 0;
+      if (popValue) popValue.textContent = "0";
 
-    // Artist input + results
-    const artistInput = document.getElementById("artistFilter");
-    if (artistInput) artistInput.value = "";
-    const artistResults = document.getElementById("ArtistSearchResults");
-    if (artistResults) artistResults.innerHTML = "";
-    const feedback = document.getElementById("ArtistSearchFeedback");
-    if (feedback) feedback.textContent = "";
+      // Duration slider
+      const durationSlider = document.getElementById("durationSlider");
+      if (durationSlider && durationSlider.noUiSlider) {
+        durationSlider.noUiSlider.set([0, 300]); // full range
+      }
 
-    // Popularity range
-    const popFilter = document.getElementById("popFilter");
-    if (popFilter) popFilter.value = 0;
-    const popValue = document.getElementById("popValue");
-    if (popValue) popValue.textContent = "0";
-
-    // --- RESET DURATION SLIDER (noUiSlider) ---
-    const durationSlider = document.getElementById("duration-slider");
-    if (durationSlider && durationSlider.noUiSlider) {
-      durationSlider.noUiSlider.set([0, 600]);  // Reset to full 0–10 min range
-    }
-
-    // --- UPDATE VISUALIZATION ---
-    updateRadar(radarFilters);
-
-  });
-
+      updateRadar(radarFilters);
+    });
+  }
 }
+
 
 
 // function handleArtistSearch(query) {
@@ -1211,9 +1345,58 @@ function handleArtistSearch(query) {
 
 window.addEventListener("DOMContentLoaded", () => {
   console.log("DOM fully loaded");
-  createVerticalSliders();
+  
+
+  // Landing: feature-importance chart
+  initFeatureImportanceChart();
+
+  const getStartedBtn = document.getElementById("getStartedBtn");
+  const dataExplorer  = document.getElementById("data-explorer");
+  const mixingBoard   = document.querySelector(".mixing-board");
+
+  if (getStartedBtn) {
+    getStartedBtn.addEventListener("click", () => {
+      // 1. Reveal the rest of the page
+      if (dataExplorer) {
+        dataExplorer.classList.remove("hidden");
+      }
+      
+      
+
+      // 2. Scroll into the data explorer (first section after hero)
+      if (dataExplorer) {
+        dataExplorer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    });
+  }
+
+  let mixingInitialized = false;
+
+const toMixingBoardBtn = document.getElementById("toMixingBoardBtn");
+
+
+if (toMixingBoardBtn) {
+  toMixingBoardBtn.addEventListener("click", () => {
+    mixingBoard.classList.remove("hidden");
+
+    if (!mixingInitialized) {
+      createVerticalSliders();
+      mixingInitialized = true;
+    }
+
+    mixingBoard.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+}
 
   let currentSongValues = null;
+
+
 
 
 
