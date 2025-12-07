@@ -240,50 +240,50 @@ let songsPromise = d3.json("data/spotify_web_subset.json").then(data => {
   return songs;
 });
 
-let spotifyData = [];
-
-fetch("data/spotify_songs_clean.csv")
-  .then(response => response.text())
-  .then(csvText => {
-    spotifyData = Papa.parse(csvText, {
-      header: true,       // first row is column names
-      skipEmptyLines: true
-    }).data;
 
 
+// fetch("data/spotify_songs_clean.csv")
+//   .then(response => response.text())
+//   .then(csvText => {
+//     spotifyData = Papa.parse(csvText, {
+//       header: true,       // first row is column names
+//       skipEmptyLines: true
+//     }).data;
 
-    // Example: build a lookup table for genres
-    const genreLookup = new Map();
-    spotifyData.forEach(d => {
-      if (d.track_name && d.playlist_genre) {
-        genreLookup.set(d.track_name, d.playlist_genre);
-      }
-    });
 
-    songs = songs.map(s => {
-      const genre = s.track_name ? genreLookup.get(s.track_name) : undefined;
-      if (!genre) {
-        console.log("No genre found for:", s.track_name);
-      }
-      return {
-        ...s,
-        playlist_genre: genre ?? "unknown"
-      };
-    });
 
-    const genreSelect = document.getElementById("genreFilter");
-    if (genreSelect) {
-      const genres = ["all", ...new Set(songs.map(d => d.playlist_genre).filter(Boolean))].sort();
-      genres.forEach(g => {
-        const opt = document.createElement("option");
-        opt.value = g;
-        opt.textContent = g;
-        genreSelect.appendChild(opt);
-      });
-    }
+//     // Example: build a lookup table for genres
+//     const genreLookup = new Map();
+//     spotifyData.forEach(d => {
+//       if (d.track_name && d.playlist_genre) {
+//         genreLookup.set(d.track_name, d.playlist_genre);
+//       }
+//     });
 
-  })
-  .catch(err => console.error("Error loading CSV:", err));
+//     songs = songs.map(s => {
+//       const genre = s.track_name ? genreLookup.get(s.track_name) : undefined;
+//       if (!genre) {
+//         console.log("No genre found for:", s.track_name);
+//       }
+//       return {
+//         ...s,
+//         playlist_genre: genre ?? "unknown"
+//       };
+//     });
+
+//     const genreSelect = document.getElementById("genreFilter");
+//     if (genreSelect) {
+//       const genres = ["all", ...new Set(songs.map(d => d.playlist_genre).filter(Boolean))].sort();
+//       genres.forEach(g => {
+//         const opt = document.createElement("option");
+//         opt.value = g;
+//         opt.textContent = g;
+//         genreSelect.appendChild(opt);
+//       });
+//     }
+
+//   })
+//   .catch(err => console.error("Error loading CSV:", err));
 
 
 
@@ -692,25 +692,50 @@ function updateRadar(filters) {
     console.log("After artist filter:", filtered.length);
   }
 
-  if (filters.durationMin != null) {
-    filtered = filtered.filter(d => d.duration_ms >= filters.durationMin);
+  // if (filters.durationMin != null) {
+  //   filtered = filtered.filter(d => d.duration_ms >= filters.durationMin);
+  //   console.log("After durationMin filter:", filtered.length);
+  // }
+
+  // if (filters.durationMax != null) {
+  //   filtered = filtered.filter(d => d.duration_ms <= filters.durationMax);
+  //   console.log("After durationMax filter:", filtered.length);
+  // }
+
+  // if (filters.popularityMin != null) {
+  //   filtered = filtered.filter(d => Number(d.track_popularity) >= filters.popularityMin);
+  //   console.log("After popularityMin filter:", filtered.length);
+  // }
+
+  // if (filters.popularityMax != null) {
+  //   filtered = filtered.filter(d => Number(d.track_popularity) <= filters.popularityMax);
+  //   console.log("After popularityMax filter:", filtered.length);
+  // }
+
+  // durationMin
+  if (filters.durationMin !== null && !isNaN(filters.durationMin) && filters.durationMin !== "") {
+    filtered = filtered.filter(d => Number(d.duration_ms) >= Number(filters.durationMin));
     console.log("After durationMin filter:", filtered.length);
   }
 
-  if (filters.durationMax != null) {
-    filtered = filtered.filter(d => d.duration_ms <= filters.durationMax);
+  // durationMax
+  if (filters.durationMax !== null && !isNaN(filters.durationMax) && filters.durationMax !== "") {
+    filtered = filtered.filter(d => Number(d.duration_ms) <= Number(filters.durationMax));
     console.log("After durationMax filter:", filtered.length);
   }
 
-  if (filters.popularityMin != null) {
-    filtered = filtered.filter(d => Number(d.track_popularity) >= filters.popularityMin);
+  // popularityMin
+  if (filters.popularityMin !== null && !isNaN(filters.popularityMin) && filters.popularityMin !== "") {
+    filtered = filtered.filter(d => Number(d.track_popularity) >= Number(filters.popularityMin));
     console.log("After popularityMin filter:", filtered.length);
   }
 
-  if (filters.popularityMax != null) {
-    filtered = filtered.filter(d => Number(d.track_popularity) <= filters.popularityMax);
+  // popularityMax
+  if (filters.popularityMax !== null && !isNaN(filters.popularityMax) && filters.popularityMax !== "") {
+    filtered = filtered.filter(d => Number(d.track_popularity) <= Number(filters.popularityMax));
     console.log("After popularityMax filter:", filtered.length);
   }
+
 
 
   // if (filters.genre) {
@@ -754,7 +779,219 @@ function updateRadar(filters) {
   makeRadarChart(data);
 }
 
+let spotifyData = [];
+const radarFilters = {
+  genre: null,
+  artist: null,
+  durationMin: null,
+  durationMax: null,
+  popularityMin: null,
+  popularityMax: null
+};
 
+
+async function loadData() {
+  console.log("Loading CSV...");
+
+  const response = await fetch("data/spotify_songs_clean.csv");
+  const csvText = await response.text();
+
+  spotifyData = Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true
+  }).data;
+
+  // Build the songs array
+  songs = spotifyData.map(s => ({
+    track_name: s.track_name,
+    track_artist: s.track_artist,
+    playlist_genre: s.playlist_genre,
+    danceability: s.danceability,
+    energy: s.energy,
+    valence: s.valence,
+    tempo: s.tempo,
+    loudness: s.loudness,
+    duration_ms: s.duration_ms,
+    track_popularity: s.track_popularity,
+    instrumentalness: s.instrumentalness,
+    acousticness: s.acousticness,
+    is_hit: s.is_hit
+  }));
+
+  console.log("Songs loaded:", songs.length);
+}
+
+function populateGenreDropdown() {
+  const genreSelect = document.getElementById("genreFilter");
+  if (!genreSelect) return;
+
+  const genres = ["all", ...new Set(songs.map(d => d.playlist_genre).filter(Boolean))].sort();
+
+  genreSelect.innerHTML = "";
+  genres.forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = g;
+    opt.textContent = g;
+    genreSelect.appendChild(opt);
+  });
+
+  console.log("Genres populated:", genres);
+}
+
+function setupEventListeners() {
+  console.log("Setting up event listeners...");
+
+  // GENRE FILTER
+  const genreSelectEl = document.getElementById("genreFilter");
+  if (genreSelectEl) {
+    genreSelectEl.addEventListener("change", () => {
+      radarFilters.genre = genreSelectEl.value === "all" ? null : genreSelectEl.value;
+      updateRadar(radarFilters);
+    });
+  }
+
+  // DURATION SLIDER
+  const durationSliderEl = document.getElementById("durationSlider");
+  if (durationSliderEl) {
+    noUiSlider.create(durationSliderEl, {
+      start: [120, 360],
+      connect: true,
+      range: { min: 0, max: 600 },
+      step: 1,
+      tooltips: [true, true],
+      format: {
+        to: val => `${Math.round(val)}s`,
+        from: val => Number(val.replace('s',''))
+      }
+    });
+
+    durationSliderEl.noUiSlider.on("update", (vals) => {
+      const [min, max] = vals.map(Number);
+      radarFilters.durationMin = min;
+      radarFilters.durationMax = max;
+      updateRadar(radarFilters);
+    });
+  }
+
+  // POPULARITY FILTER
+  const popSlider = document.getElementById("popFilter");
+  const popValue = document.getElementById("popValue");
+
+  if (popSlider) {
+    popSlider.addEventListener("input", () => {
+      const val = Number(popSlider.value);
+      popValue.textContent = val;
+      radarFilters.popularityMin = 0;
+      radarFilters.popularityMax = val;
+      updateRadar(radarFilters);
+    });
+  }
+
+  // ARTIST SEARCH
+  const aInput = document.getElementById("artistFilter");
+  const aBtn = document.getElementById("ArtistSearchBtn");
+
+  if (aBtn) {
+    aBtn.addEventListener("click", () => handleArtistSearch(aInput.value));
+  }
+
+  if (aInput) {
+    aInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleArtistSearch(aInput.value);
+    });
+  }
+}
+
+
+// function handleArtistSearch(query) {
+//     console.log("handleArtistSearch called with query:", query);
+
+//     if (!songs.length) return;
+
+//     const q = query.trim().toLowerCase();
+//     if (!q) return;
+
+//     const matches = songs.filter(s => {
+//       const artist = String(s.track_artist ?? "").toLowerCase();
+//       return artist.includes(q);
+//     });
+
+//     console.log("Matches found:", matches.length);
+
+//     const saResults = document.getElementById("ArtistSearchResults");
+//     const saFeedback = document.getElementById("ArtistSearchFeedback");
+//     if (!saResults || !saFeedback) return;
+
+//     saResults.innerHTML = "";
+
+//     if (!matches.length) {
+//       saFeedback.textContent = "No artists found matching that query.";
+//       return;
+//     }
+
+//     saFeedback.textContent = matches.length === 1
+//       ? "Found 1 artist. Click to use it:"
+//       : `Found ${matches.length} artists. Pick one:`;
+
+//     const seen = new Set();
+//     matches.forEach(song => {
+//       const artistName = song.track_artist;
+//       if (seen.has(artistName)) return;
+//       seen.add(artistName);
+
+//       const item = document.createElement("div");
+//       item.className = "search-result-item";
+//       item.textContent = artistName;
+//       item.addEventListener("click", () => {
+//         radarFilters.artist = artistName.toLowerCase();
+//         updateRadar(radarFilters);
+
+//         saResults.innerHTML = "";
+//         saFeedback.textContent = `Showing: ${artistName}`;
+//       });
+//       saResults.appendChild(item);
+//     });
+//   }
+
+
+function handleArtistSearch(query) {
+  query = query.trim().toLowerCase();
+  if (!query) return;
+
+  const matches = songs.filter(s =>
+    String(s.track_artist ?? "").toLowerCase().includes(query)
+  );
+
+  const container = document.getElementById("ArtistSearchResults");
+  const feedback = document.getElementById("ArtistSearchFeedback");
+
+  if (!container || !feedback) return;
+
+  container.innerHTML = "";
+  if (!matches.length) {
+    feedback.textContent = "No artists found.";
+    return;
+  }
+
+  feedback.textContent = `Found ${matches.length} artist(s):`;
+  const seen = new Set();
+
+  matches.forEach(s => {
+    if (seen.has(s.track_artist)) return;
+    seen.add(s.track_artist);
+
+    const div = document.createElement("div");
+    div.className = "search-result-item";
+    div.textContent = s.track_artist;
+    div.onclick = () => {
+      radarFilters.artist = s.track_artist.toLowerCase();
+      updateRadar(radarFilters);
+      container.innerHTML = "";
+      feedback.textContent = `Showing: ${s.track_artist}`;
+    };
+    container.appendChild(div);
+  });
+}
 
 
 
@@ -1027,108 +1264,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
 
-  const radarFilters = {
-    genre: null,
-    durationMin: null,
-    durationMax: null,
-    popularityMin: null,
-    popularityMax: null
-  };
-
-  const genreSelectEl = document.getElementById("genreFilter");
-  if (genreSelectEl) {
-    genreSelectEl.addEventListener("change", () => {
-      radarFilters.genre = genreSelectEl.value;
-      updateRadar(radarFilters);
-    });
-  }
-
   
 
-  const durationSliderEl = document.getElementById("durationSlider");
-  noUiSlider.create(durationSliderEl, {
-    start: [120, 360],
-    connect: true,
-    range: { min: 0, max: 600 },
-    step: 1,
-    tooltips: [true, true],
-    format: {
-      to: val => `${Math.round(val)}s`,
-      from: val => Number(val.replace('s',''))
-    }
-  });
-
-  durationSliderEl.noUiSlider.on("update", (vals) => {
-    const [min, max] = vals.map(Number);
-    radarFilters.durationMin = min;
-    radarFilters.durationMax = max;
-    updateRadar(radarFilters);
-  });
-
-  const popSlider = document.getElementById("popFilter");
-  const popValue = document.getElementById("popValue");
-
-  if (popSlider) {
-    popSlider.addEventListener("input", () => {
-      const val = Number(popSlider.value);
-      popValue.textContent = val;
-      radarFilters.popularityMin = 0; 
-      radarFilters.popularityMax = val;
-      updateRadar(radarFilters);
-    });
-  }
-
   
-
-  function handleArtistSearch(query) {
-    console.log("handleArtistSearch called with query:", query);
-
-    if (!songs.length) return;
-
-    const q = query.trim().toLowerCase();
-    if (!q) return;
-
-    const matches = songs.filter(s => {
-      const artist = String(s.track_artist ?? "").toLowerCase();
-      return artist.includes(q);
-    });
-
-    console.log("Matches found:", matches.length);
-
-    const saResults = document.getElementById("ArtistSearchResults");
-    const saFeedback = document.getElementById("ArtistSearchFeedback");
-    if (!saResults || !saFeedback) return;
-
-    saResults.innerHTML = "";
-
-    if (!matches.length) {
-      saFeedback.textContent = "No artists found matching that query.";
-      return;
-    }
-
-    saFeedback.textContent = matches.length === 1
-      ? "Found 1 artist. Click to use it:"
-      : `Found ${matches.length} artists. Pick one:`;
-
-    const seen = new Set();
-    matches.forEach(song => {
-      const artistName = song.track_artist;
-      if (seen.has(artistName)) return;
-      seen.add(artistName);
-
-      const item = document.createElement("div");
-      item.className = "search-result-item";
-      item.textContent = artistName;
-      item.addEventListener("click", () => {
-        radarFilters.artist = artistName.toLowerCase();
-        updateRadar(radarFilters);
-
-        saResults.innerHTML = "";
-        saFeedback.textContent = `Showing: ${artistName}`;
-      });
-      saResults.appendChild(item);
-    });
-  }
 
   const aInput = document.getElementById("artistFilter");
   const aBtn = document.getElementById("ArtistSearchBtn");
@@ -1147,3 +1285,9 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadData();          // 🟢 wait for CSV
+  populateGenreDropdown();   // 🟢 now songs exist
+  setupEventListeners();     // 🟢 now UI can react
+  updateRadar(radarFilters); // 🟢 initial chart
+});
