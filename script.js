@@ -6,11 +6,19 @@ gsap.registerPlugin(ScrollTrigger);
 console.log("script.js loaded");
 
 let histogramMode = "all";  
+let radarChart = null;
+
 
 
 function logistic(score) {
   return 1 / (1 + Math.exp(-score));
 }
+
+function normalizeFeature(value, min, max) {
+  if (max === min) return 0.5;
+  return (value - min) / (max - min);
+}
+
 
 
 
@@ -232,6 +240,55 @@ let songsPromise = d3.json("data/spotify_web_subset.json").then(data => {
   return songs;
 });
 
+let spotifyData = [];
+
+fetch("data/spotify_songs_clean.csv")
+  .then(response => response.text())
+  .then(csvText => {
+    spotifyData = Papa.parse(csvText, {
+      header: true,       // first row is column names
+      skipEmptyLines: true
+    }).data;
+
+
+
+    // Example: build a lookup table for genres
+    const genreLookup = new Map();
+    spotifyData.forEach(d => {
+      if (d.track_name && d.playlist_genre) {
+        genreLookup.set(d.track_name, d.playlist_genre);
+      }
+    });
+
+    songs = songs.map(s => {
+      const genre = s.track_name ? genreLookup.get(s.track_name) : undefined;
+      if (!genre) {
+        console.log("No genre found for:", s.track_name);
+      }
+      return {
+        ...s,
+        playlist_genre: genre ?? "unknown"
+      };
+    });
+
+    const genreSelect = document.getElementById("genreFilter");
+    if (genreSelect) {
+      const genres = ["all", ...new Set(songs.map(d => d.playlist_genre).filter(Boolean))].sort();
+      genres.forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        genreSelect.appendChild(opt);
+      });
+    }
+
+  })
+  .catch(err => console.error("Error loading CSV:", err));
+
+
+
+
+
 
 function findSongsByQuery(query) {
   if (!songs.length) return [];
@@ -244,6 +301,9 @@ function findSongsByQuery(query) {
     return title.includes(q) || artist.includes(q);
   });
 }
+
+
+
 
 function pickRandomIsHit() {
   if (!songs.length) return null;
@@ -538,6 +598,167 @@ function enableScrollSections() {
   });
 }
 
+
+
+//radar chart stuff
+function makeRadarChart(data) {
+  const ctx = document.getElementById("radarCanvas").getContext("2d");
+
+  if (radarChart) radarChart.destroy();
+
+  radarChart = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: ["danceability", "energy", "valence", "acousticness", "instrumentalness", "loudness", "tempo"],
+      datasets: [
+        {
+          label: "All Songs (Mean)",
+          data: data.all,
+          borderWidth: 2,
+          borderColor: "rgba(200,200,200,0.9)",
+          backgroundColor: "rgba(200,200,200,0.2)",
+        },
+        {
+          label: "Hit Songs (Mean)",
+          data: data.hits,
+          borderWidth: 2,
+          borderColor: "rgba(0,200,255,0.9)",
+          backgroundColor: "rgba(0,200,255,0.2)",
+        },
+        {
+          label: "Filtered Subset (Mean)",
+          data: data.filtered,
+          borderWidth: 2,
+          borderColor: "rgba(255,0,130,0.9)",
+          backgroundColor: "rgba(255,0,130,0.2)",
+        },
+      ]
+    },
+    options: {
+      scales: {
+        r: {
+          angleLines: { color: "#555" },
+          grid: { color: "#222" },
+          pointLabels: { color: "#fff", font: { size: 12 } },
+          ticks: { color: "#fff", backdropColor: "#000" }, // numbers with black background
+          beginAtZero: true,
+          min: 0,
+          max: 1
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: "#fff" }
+        }
+      }
+    }
+  });
+}
+
+function computeMeans(list) {
+  if (!list.length) return [0,0,0,0,0,0,0];
+
+  const sum = { danceability:0, energy:0, valence:0, acousticness:0, 
+                instrumentalness:0, loudness:0, tempo:0 };
+
+  list.forEach(s => {
+    sum.danceability += Number(s.danceability);
+    sum.energy += Number(s.energy);
+    sum.valence += Number(s.valence);
+    sum.acousticness += Number(s.acousticness);
+    sum.instrumentalness += Number(s.instrumentalness);
+    sum.loudness += Number(s.loudness);
+    sum.tempo += Number(s.tempo) / 200;  // scale tempo 0–1
+  });
+
+  const n = list.length;
+  return Object.values(sum).map(v => v / n);
+}
+
+function updateRadar(filters) {
+  const features = ["danceability", "energy", "valence", "acousticness", "instrumentalness", "loudness", "tempo"];
+
+  // Filtered songs
+  let filtered = songs;
+  console.log(filtered.length)
+
+  if (filters.genre) {
+    filtered = filtered.filter(d => d.playlist_genre === filters.genre);
+    console.log("After genre filter:", filtered.length);
+  }
+
+  if (filters.artist) {
+    filtered = filtered.filter(d => (d.track_artist ?? "").toLowerCase().includes(filters.artist));
+    console.log("After artist filter:", filtered.length);
+  }
+
+  if (filters.durationMin != null) {
+    filtered = filtered.filter(d => d.duration_ms >= filters.durationMin);
+    console.log("After durationMin filter:", filtered.length);
+  }
+
+  if (filters.durationMax != null) {
+    filtered = filtered.filter(d => d.duration_ms <= filters.durationMax);
+    console.log("After durationMax filter:", filtered.length);
+  }
+
+  if (filters.popularityMin != null) {
+    filtered = filtered.filter(d => Number(d.track_popularity) >= filters.popularityMin);
+    console.log("After popularityMin filter:", filtered.length);
+  }
+
+  if (filters.popularityMax != null) {
+    filtered = filtered.filter(d => Number(d.track_popularity) <= filters.popularityMax);
+    console.log("After popularityMax filter:", filtered.length);
+  }
+
+
+  // if (filters.genre) {
+  //   filtered = filtered.filter(d => d.playlist_genre === filters.genre);
+  // }
+  // if (filters.artist) {
+  //   filtered = filtered.filter(d => (d.track_artist ?? "").toLowerCase().includes(filters.artist));
+  // }
+  // if (filters.durationMin != null) filtered = filtered.filter(d => d.duration_ms >= filters.durationMin);
+  // if (filters.durationMax != null) filtered = filtered.filter(d => d.duration_ms <= filters.durationMax);
+  // if (filters.popularityMin != null) filtered = filtered.filter(d => Number(d.track_popularity) >= filters.popularityMin);
+  // if (filters.popularityMax != null) filtered = filtered.filter(d => Number(d.track_popularity) <= filters.popularityMax);
+
+  // Compute min/max for normalization across full dataset
+  const featureRanges = {};
+  features.forEach(f => {
+    const vals = songs.map(s => Number(s[f])).filter(v => !isNaN(v));
+    featureRanges[f] = { min: Math.min(...vals), max: Math.max(...vals) };
+  });
+
+  // Function to compute mean of features
+  function meanFeatures(songArray) {
+    const meanObj = {};
+    features.forEach(f => {
+      const vals = songArray.map(s => Number(s[f])).filter(v => !isNaN(v));
+      const meanVal = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+      meanObj[f] = normalizeFeature(meanVal, featureRanges[f].min, featureRanges[f].max);
+    });
+    return meanObj;
+  }
+
+  const data = {
+    all: features.map(f => meanFeatures(songs)[f]),
+    hits: features.map(f => meanFeatures(songs.filter(s => s.is_hit === "1"))[f]),
+    filtered: features.map(f => meanFeatures(filtered)[f]),
+  };
+
+
+  console.log("Radar data:", data);
+
+  makeRadarChart(data);
+}
+
+
+
+
+
+
 // this the main thing
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -546,62 +767,49 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let currentSongValues = null;
 
-  
-
-  // document.getElementById("all").onclick = () => {
-  //   histogramMode = "all";
-  //   renderComparisonViz(currentSongValues ?? userValues);
-  // };
-
-  // document.getElementById("hit").onclick = () => {
-  //   histogramMode = "hit";
-  //   renderComparisonViz(currentSongValues ?? userValues);
-  // };
-
-  // document.getElementById("both").onclick = () => {
-  //   histogramMode = "both";
-  //   renderComparisonViz(currentSongValues ?? userValues);
-  // };
 
 
   const results = document.getElementById("results");
 
   const runModel = async () => {
-  results.classList.remove("hidden");
+    results.classList.remove("hidden");
 
-  const mix = { ...userValues };
-  currentSongValues = mix;
+    const mix = { ...userValues };
+    currentSongValues = mix;
+    
+    const prob = computeHitProbability(mix);
+
+    renderPredictedResult(prob);
+    await songsPromise;
+
+
+
+    
+
+
+    if (!songs.length) {
+      const container = document.getElementById("comparisonViz");
+      if (container) {
+        container.innerHTML = "<p style='color:#ddd'>Data still loading or failed to load — try again in a second.</p>";
+      }
+    } else {
+      renderComparisonViz(mix);
+      renderSimilarSongs(mix);
+    }
+
+    gsap.to(results, { opacity: 1, duration: 0.6 });
+    enableScrollSections();
+  };
+
+
 
   document.querySelectorAll("input[name='histMode']").forEach(radio => {
     radio.addEventListener("change", e => {
       histogramMode = e.target.value;
-      console.log("Radio changed to:", e.target.value);
-      console.log(currentSongValues);
       renderComparisonViz(currentSongValues); 
     });
   });
-  
-  const prob = computeHitProbability(mix);
-
-  renderPredictedResult(prob);
-
-  await songsPromise;
-
-  if (!songs.length) {
-    const container = document.getElementById("comparisonViz");
-    if (container) {
-      container.innerHTML = "<p style='color:#ddd'>Data still loading or failed to load — try again in a second.</p>";
-    }
-  } else {
-    renderComparisonViz(mix);
-    renderSimilarSongs(mix);
-  }
-
-  gsap.to(results, { opacity: 1, duration: 0.6 });
-  enableScrollSections();
-};
-
-
+    
 
   document.getElementById("createSongBtn").addEventListener("click", () => {
     currentSong = null;
@@ -669,30 +877,31 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-function applySongToSliders(song) {
-  currentSong = song; 
 
-  const infoEl = document.getElementById("hitSongInfo");
-  if (infoEl) {
-    infoEl.textContent = "";
+  function applySongToSliders(song) {
+    currentSong = song; 
+
+    const infoEl = document.getElementById("hitSongInfo");
+    if (infoEl) {
+      infoEl.textContent = "";
+    }
+
+    const preset = {
+      tempo:            Number(song.tempo),
+      danceability:     Number(song.danceability),
+      energy:           Number(song.energy),
+      valence:          Number(song.valence),
+      instrumentalness: Number(song.instrumentalness),
+      acousticness:     Number(song.acousticness),
+      loudness:         Number(song.loudness),
+    };
+
+    setPresetValues(preset);
+    runModel();
   }
 
-  const preset = {
-    tempo:            Number(song.tempo),
-    danceability:     Number(song.danceability),
-    energy:           Number(song.energy),
-    valence:          Number(song.valence),
-    instrumentalness: Number(song.instrumentalness),
-    acousticness:     Number(song.acousticness),
-    loudness:         Number(song.loudness),
-  };
 
-  setPresetValues(preset);
-  runModel();
-}
-
-
- const saInput = document.getElementById("songArtistSearchInput");
+  const saInput = document.getElementById("songArtistSearchInput");
   const saBtn = document.getElementById("songArtistSearchBtn");
   const saFeedback = document.getElementById("songArtistSearchFeedback");
   const saResults = document.getElementById("songArtistSearchResults");
@@ -759,6 +968,7 @@ function applySongToSliders(song) {
       }
     });
   }
+
   const hintToggle = document.getElementById("hintToggle");
   const hintPanel  = document.getElementById("hintPanel");
 
@@ -774,6 +984,166 @@ function applySongToSliders(song) {
       }
     });
   }
+
+  // songsPromise.then(() => {
+  //   const genreSelect = document.getElementById("genreFilter");
+  //   console.log("genreSelect:", genreSelect);
+  //   if (!genreSelect) return;
+
+  //   const genres = ['all', ...new Set(songs.map(d => d.playlist_genre).filter(Boolean))].sort();
+  //   console.log("Genres found:", genres);
+
+
+  //   genreSelect.innerHTML = "";
+  //   genres.forEach(g => {
+  //     const opt = document.createElement("option");
+  //     opt.value = g;
+  //     opt.textContent = g;
+  //     genreSelect.appendChild(opt);
+  //   });
+  // });
+
+  
+// songsPromise.then(() => {
+//   songs = spotifyData.map(s => ({
+//     track_name: s.track_name,
+//     track_artist: s.track_artist,
+//     playlist_genre: s.playlist_genre,
+//     danceability: s.danceability,
+//     energy: s.energy,
+//     valence: s.valence,
+//     tempo: s.tempo,
+//     loudness: s.loudness,
+//     duration_ms: s.duration_ms,
+//     track_popularity: s.track_popularity,
+//     instrumentalness: s.instrumentalness,
+//     acousticness: s.acousticness
+//   }));
+
+//   updateRadar(radarFilters);
+
+// });
+  
+
+
+
+  const radarFilters = {
+    genre: null,
+    durationMin: null,
+    durationMax: null,
+    popularityMin: null,
+    popularityMax: null
+  };
+
+  const genreSelectEl = document.getElementById("genreFilter");
+  if (genreSelectEl) {
+    genreSelectEl.addEventListener("change", () => {
+      radarFilters.genre = genreSelectEl.value;
+      updateRadar(radarFilters);
+    });
+  }
+
+  
+
+  const durationSliderEl = document.getElementById("durationSlider");
+  noUiSlider.create(durationSliderEl, {
+    start: [120, 360],
+    connect: true,
+    range: { min: 0, max: 600 },
+    step: 1,
+    tooltips: [true, true],
+    format: {
+      to: val => `${Math.round(val)}s`,
+      from: val => Number(val.replace('s',''))
+    }
+  });
+
+  durationSliderEl.noUiSlider.on("update", (vals) => {
+    const [min, max] = vals.map(Number);
+    radarFilters.durationMin = min;
+    radarFilters.durationMax = max;
+    updateRadar(radarFilters);
+  });
+
+  const popSlider = document.getElementById("popFilter");
+  const popValue = document.getElementById("popValue");
+
+  if (popSlider) {
+    popSlider.addEventListener("input", () => {
+      const val = Number(popSlider.value);
+      popValue.textContent = val;
+      radarFilters.popularityMin = 0; 
+      radarFilters.popularityMax = val;
+      updateRadar(radarFilters);
+    });
+  }
+
+  
+
+  function handleArtistSearch(query) {
+    console.log("handleArtistSearch called with query:", query);
+
+    if (!songs.length) return;
+
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+
+    const matches = songs.filter(s => {
+      const artist = String(s.track_artist ?? "").toLowerCase();
+      return artist.includes(q);
+    });
+
+    console.log("Matches found:", matches.length);
+
+    const saResults = document.getElementById("ArtistSearchResults");
+    const saFeedback = document.getElementById("ArtistSearchFeedback");
+    if (!saResults || !saFeedback) return;
+
+    saResults.innerHTML = "";
+
+    if (!matches.length) {
+      saFeedback.textContent = "No artists found matching that query.";
+      return;
+    }
+
+    saFeedback.textContent = matches.length === 1
+      ? "Found 1 artist. Click to use it:"
+      : `Found ${matches.length} artists. Pick one:`;
+
+    const seen = new Set();
+    matches.forEach(song => {
+      const artistName = song.track_artist;
+      if (seen.has(artistName)) return;
+      seen.add(artistName);
+
+      const item = document.createElement("div");
+      item.className = "search-result-item";
+      item.textContent = artistName;
+      item.addEventListener("click", () => {
+        radarFilters.artist = artistName.toLowerCase();
+        updateRadar(radarFilters);
+
+        saResults.innerHTML = "";
+        saFeedback.textContent = `Showing: ${artistName}`;
+      });
+      saResults.appendChild(item);
+    });
+  }
+
+  const aInput = document.getElementById("artistFilter");
+  const aBtn = document.getElementById("ArtistSearchBtn");
+
+  if (aBtn) {
+    aBtn.addEventListener("click", () => handleArtistSearch(aInput.value));
+  }
+
+  if (aInput) {
+    aInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleArtistSearch(aInput.value);
+    });
+  }
+
+
 });
 
 

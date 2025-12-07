@@ -11,6 +11,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <script type="module" src="https://unpkg.com/metallicss@4.0.3/dist/metallicss.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+
 
 
 
@@ -152,6 +158,48 @@
       <h2>The Verdict</h2>
       <p id="closingMessage"></p>
     </div>
+
+    <div class="scroll-section" id="result-5">
+      <h2>Explore the Dataset</h2>
+      <p>Filter the songs and see the average feature profile compared to hit songs and the full dataset.</p>
+
+      <div id="exploreControls">
+        <label>
+          Genre:
+          <select id="genreFilter"></select>
+        </label>
+
+        <p>Search for an Artist</p>
+        <div class="search-container">
+          <input
+            id="artistFilter"
+            type="text"
+            placeholder="Artist name"
+          />
+          <button id="ArtistSearchBtn" class="search-btn metallicss">
+            SEARCH
+          </button>
+          <div id="ArtistSearchFeedback" class="search-feedback"></div>
+          <div id="ArtistSearchResults" class="search-results"></div>
+        </div>
+
+        <label>
+          Min Popularity:
+          <input id="popFilter" type="range" min="0" max="100" value="0" step="1">
+          <span id="popValue">0</span>
+        </label>
+
+        <label>
+          Duration:
+          <div id="durationSlider" class="slider"></div>
+        </label>
+      </div>
+
+      <div id="radarChartContainer">
+        <canvas id="radarCanvas"></canvas>
+      </div>
+    </div>
+
 
   </section>
 
