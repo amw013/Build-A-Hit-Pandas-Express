@@ -283,6 +283,14 @@ body {
   gap: 8px;
 }
 
+#artistFilter {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
 #songArtistSearchInput {
   width: 260px;
   max-width: 80vw;
@@ -568,7 +576,7 @@ body {
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 
-#exploreControls {
+/* #exploreControls {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -579,6 +587,16 @@ body {
   border-radius: 16px;
   border: 1px solid #27272f;
   box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+} */
+
+#exploreControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center all filter groups */
+  gap: 20px;           /* vertical spacing between filters */
+  width: 100%;
+  max-width: 400px;    /* optional: keep filters from stretching too wide */
+  margin: 0 auto;
 }
 
 #exploreControls label {
@@ -606,6 +624,21 @@ body {
 #exploreControls input[type="range"] {
   margin-top: 8px;
   width: 100%;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center label + input */
+  width: 100%;
+}
+
+.filter-group label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: column; /* stack label and input vertically */
+  align-items: center;
 }
 
 #radarChartContainer {
@@ -652,48 +685,45 @@ body {
 }
 
 #popFilter {
-  /* -webkit-appearance: none; */
   width: 100%;
   height: 8px;
   background: #444;
   border-radius: 4px;
   outline: none;
-  margin-top: 6px;
+  margin-top: 10px;    /* more spacing so it doesn't overlap label */
+  margin-bottom:2px;
+  writing-mode: horizontal-tb !important;
+  appearance: none !important;
+  transform: none !important;
+
 }
 
 #popFilter::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background: #ff4b81;
   border-radius: 50%;
   border: 2px solid #ff006e;
   cursor: pointer;
-  margin-top: -6px; 
+  margin-top: -5px; /* centers thumb over the track */
 }
 
 #popFilter::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background: #ff4b81;
   border-radius: 50%;
   border: 2px solid #ff006e;
   cursor: pointer;
 }
 
-#durationSlider .noUi-handle {
-  width: 20px;
-  height: 20px;
-  background: #ff4b81;
-  border: 2px solid #ff006e;
-  border-radius: 50%;
-}
-#durationSlider .noUi-connect {
-  background: #ff77b3;
-}
-#durationSlider {
-  height: 10px; /* thin track */
-  margin-top: 12px;
+#popValue {
+  margin-left: 6px;
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 400;
+  margin-top: 0px;
 }
 
 
@@ -794,4 +824,108 @@ body {
   height: 260px;
   margin: 0 auto;
   display: block;
+}
+
+
+
+
+/* ===== Artist search: center the label + shrink the button ===== */
+.artist-search-label {
+  display: block;
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+/* center the inputs inside the small search area */
+/* .search-container {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+} */
+
+/* make the Artist SEARCH button smaller and tighter than the main search button */
+#ArtistSearchBtn.search-btn {
+  width: 110px;           /* smaller */
+  height: 38px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+/* keep other .search-btn styles unchanged — this only targets the artist button id */
+#ArtistSearchBtn { box-sizing: border-box; }
+
+/* Feedback/results for artist search: match existing search-results style */
+#ArtistSearchFeedback { text-align:center; margin-top:6px; color:#9ca3af; }
+#ArtistSearchResults { margin-top:6px; max-height:160px; overflow-y:auto; }
+
+#ArtistSearchResults .search-result-item { background:#0b0b12; border:1px solid #27272f; }
+#ArtistSearchFeedback { color:#9ca3af; text-align:center; margin-top:6px; }
+
+.artist-search-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* horizontally center EVERYTHING */
+  width: 100%;
+}
+
+.artist-search-wrap .search-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+
+/* .slider-container {
+    width: 300px;
+    margin: 20px 0;
+} */
+
+.slider-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+
+#duration-slider {
+    width:100%;
+    margin-top: 6px;
+    background: #444;
+}
+
+#duration-slider .noUi-target {
+  background: #444;          /* same as popFilter track */
+  border-radius: 4px;
+  height: 8px;               /* same track height */
+  margin-top: 10px;
+}
+
+#duration-slider .noUi-connect {
+  background: #444;       /* optional: like a colored fill */
+  border: 0px;
+}
+
+#duration-slider .noUi-handle {
+  background: #ff4b81;       /* same thumb color */
+  border: 0px;
+}
+
+#duration-display {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: #444;
+}
+
+#genreFilter{
+  margin-bottom: 15px;
 }

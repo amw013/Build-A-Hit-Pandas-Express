@@ -187,36 +187,56 @@
       <p>Filter the songs and see the average feature profile compared to hit songs and the full dataset.</p>
 
       <div id="exploreControls">
-        <label>
-          Genre:
-          <select id="genreFilter"></select>
-        </label>
+        
+        <div class="filter-group">
+          <label>
+            Genre:
+            <select id="genreFilter"></select>
+          </label>
+        </div>
+        
+        <div class="filter-group artist-search-wrap">
+          <label>Search for an artist:</label>
+          <div class="search-container">
+            <input id="artistFilter" type="text" placeholder="Artist name" />
+            <button id="ArtistSearchBtn" class="search-btn metallicss">SEARCH</button>
+          </div>
 
-        <p>Search for an Artist</p>
-        <div class="search-container">
-          <input
-            id="artistFilter"
-            type="text"
-            placeholder="Artist name"
-          />
-          <button id="ArtistSearchBtn" class="search-btn metallicss">
-            SEARCH
-          </button>
           <div id="ArtistSearchFeedback" class="search-feedback"></div>
           <div id="ArtistSearchResults" class="search-results"></div>
         </div>
 
-        <label>
-          Min Popularity:
-          <input id="popFilter" type="range" min="0" max="100" value="0" step="1">
-          <span id="popValue">0</span>
-        </label>
 
-        <label>
-          Duration:
-          <div id="durationSlider" class="slider"></div>
-        </label>
+        <div class="filter-group">
+          <label>
+            Min Popularity:
+            <input id="popFilter" type="range" min="0" max="100" value="0" step="1">
+            <span id="popValue">0</span>
+          </label>
+        </div>
+
+        
+
+        <div class="filter-group slider-container">
+          <label>Duration (mm:ss)</label>
+          <div id="duration-slider"></div>
+          <div id="duration-display"></div>
+        </div>
+
+        
+
+        <div class="filter-group">
+          <button id="resetFiltersBtn" class="search-btn metallicss">RESET FILTERS</button>
+        </div>
+        <br>
+
+
+
+
       </div>
+
+      
+
 
       <div id="radarChartContainer">
         <canvas id="radarCanvas"></canvas>

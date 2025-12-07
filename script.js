@@ -480,13 +480,21 @@ function renderSimilarComparisonChart(mix, similarSongs) {
     label: "Your mix",
     data: extractVals(mix),
     borderWidth: 2,
-    borderColor: "rgba(0, 200, 255, 0.9)",
-    backgroundColor: "rgba(0, 200, 255, 0.2)",
+    borderColor: "rgba(200, 200, 200, 0.7)",
+    backgroundColor: "rgba(200, 200, 200, 0.15)",
     pointRadius: 3,
   });
 
+  const palette = [
+    "rgba(255, 127, 227, 0.9)",  
+    "rgba(87, 255, 177, 0.9)",  
+    "rgba(200, 135, 255, 0.9)", 
+  ];
+
+
+
   // Each similar song as a grey line
-  similarSongs.forEach((song) => {
+  similarSongs.forEach((song, i) => {
     const shortName =
       song.track_name.length > 18
         ? song.track_name.slice(0, 18) + "…"
@@ -496,11 +504,14 @@ function renderSimilarComparisonChart(mix, similarSongs) {
       label: shortName,
       data: extractVals(song),
       borderWidth: 1,
-      borderColor: "rgba(200, 200, 200, 0.7)",
-      backgroundColor: "rgba(200, 200, 200, 0.15)",
+      borderColor: palette[i],
+      backgroundColor: palette[i].replace("0.9)", "0.15)"),
       pointRadius: 2,
     });
   });
+
+  
+
 
   similarRadarChart = new Chart(ctx, {
     type: "radar",
@@ -825,55 +836,47 @@ function updateRadar(filters) {
     filtered = filtered.filter(d => d.playlist_genre === filters.genre);
     console.log("After genre filter:", filtered.length);
   }
+  else{
+    console.log('p', filters)
+  }
 
   if (filters.artist) {
     filtered = filtered.filter(d => (d.track_artist ?? "").toLowerCase().includes(filters.artist));
     console.log("After artist filter:", filtered.length);
   }
+  else{
+    console.log('o', filters)
+  }
 
-  // if (filters.durationMin != null) {
-  //   filtered = filtered.filter(d => d.duration_ms >= filters.durationMin);
-  //   console.log("After durationMin filter:", filtered.length);
-  // }
+  if (filters.durationMin != null) {
+    filtered = filtered.filter(d => d.duration_ms >= filters.durationMin * 1000);
+    console.log("After durationMin filter:", filtered.length);
+  }
+  else{
+    console.log('poo', filters)
+  }
 
-  // if (filters.durationMax != null) {
-  //   filtered = filtered.filter(d => d.duration_ms <= filters.durationMax);
-  //   console.log("After durationMax filter:", filtered.length);
-  // }
+  if (filters.durationMax != null) {
+    filtered = filtered.filter(d => d.duration_ms <= filters.durationMax * 1000);
+    console.log("After durationMax filter:", filtered.length);
+  }
+  else{
+    console.log('pee', filters)
+  }
 
-  // if (filters.popularityMin != null) {
-  //   filtered = filtered.filter(d => Number(d.track_popularity) >= filters.popularityMin);
-  //   console.log("After popularityMin filter:", filtered.length);
-  // }
+  if (filters.popularityMin != null) {
+    filtered = filtered.filter(d => Number(d.track_popularity) >= filters.popularityMin);
+    console.log("After popularityMin filter:", filtered.length);
+  }
+  else{
+    console.log('pe', filters)
+  }
 
   // if (filters.popularityMax != null) {
   //   filtered = filtered.filter(d => Number(d.track_popularity) <= filters.popularityMax);
   //   console.log("After popularityMax filter:", filtered.length);
   // }
 
-  // durationMin
-  if (filters.durationMin !== null && !isNaN(filters.durationMin) && filters.durationMin !== "") {
-    filtered = filtered.filter(d => Number(d.duration_ms) >= Number(filters.durationMin));
-    console.log("After durationMin filter:", filtered.length);
-  }
-
-  // durationMax
-  if (filters.durationMax !== null && !isNaN(filters.durationMax) && filters.durationMax !== "") {
-    filtered = filtered.filter(d => Number(d.duration_ms) <= Number(filters.durationMax));
-    console.log("After durationMax filter:", filtered.length);
-  }
-
-  // popularityMin
-  if (filters.popularityMin !== null && !isNaN(filters.popularityMin) && filters.popularityMin !== "") {
-    filtered = filtered.filter(d => Number(d.track_popularity) >= Number(filters.popularityMin));
-    console.log("After popularityMin filter:", filtered.length);
-  }
-
-  // popularityMax
-  if (filters.popularityMax !== null && !isNaN(filters.popularityMax) && filters.popularityMax !== "") {
-    filtered = filtered.filter(d => Number(d.track_popularity) <= Number(filters.popularityMax));
-    console.log("After popularityMax filter:", filtered.length);
-  }
 
 
 
@@ -977,6 +980,12 @@ function populateGenreDropdown() {
   console.log("Genres populated:", genres);
 }
 
+function formatMMSS(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 function setupEventListeners() {
   console.log("Setting up event listeners...");
 
@@ -990,38 +999,51 @@ function setupEventListeners() {
   }
 
   // DURATION SLIDER
-  const durationSliderEl = document.getElementById("durationSlider");
-  if (durationSliderEl) {
-    noUiSlider.create(durationSliderEl, {
-      start: [120, 360],
-      connect: true,
-      range: { min: 0, max: 600 },
-      step: 1,
-      tooltips: [true, true],
-      format: {
-        to: val => `${Math.round(val)}s`,
-        from: val => Number(val.replace('s',''))
-      }
-    });
+  const slider = document.getElementById("duration-slider");
 
-    durationSliderEl.noUiSlider.on("update", (vals) => {
-      const [min, max] = vals.map(Number);
-      radarFilters.durationMin = min;
-      radarFilters.durationMax = max;
-      updateRadar(radarFilters);
-    });
-  }
+    // Create the noUiSlider
+  noUiSlider.create(slider, {
+    start: [0, 300],        // 0:00 to 5:00
+    connect: true,
+    range: {
+        min: 0,
+        max: 300           // total seconds
+    },
+    step: 1,                // 1 second increments
+    tooltips: false
+  });
+
+  const display = document.getElementById("duration-display");
+
+    // Update text display live
+  slider.noUiSlider.on("update", function(values) {
+    const minSec = formatMMSS(parseInt(values[0]));
+    const maxSec = formatMMSS(parseInt(values[1]));
+    display.textContent = `${minSec} — ${maxSec}`;
+  });
+
+    // Send cleaned filter values to your visualization
+  slider.noUiSlider.on("set", function(values) {
+
+    radarFilters.durationMin = parseInt(values[0]);
+    radarFilters.durationMax = parseInt(values[1])
+
+    // console.log('lol', radarFilters)
+
+    updateRadar(radarFilters);  // <--- your filtering function
+  });
 
   // POPULARITY FILTER
   const popSlider = document.getElementById("popFilter");
   const popValue = document.getElementById("popValue");
 
-  if (popSlider) {
+  if (popSlider && popValue) {
+    popValue.textContent = popSlider.value;
     popSlider.addEventListener("input", () => {
       const val = Number(popSlider.value);
       popValue.textContent = val;
-      radarFilters.popularityMin = 0;
-      radarFilters.popularityMax = val;
+      radarFilters.popularityMin = val;
+      radarFilters.popularityMax = 100;
       updateRadar(radarFilters);
     });
   }
@@ -1039,6 +1061,50 @@ function setupEventListeners() {
       if (e.key === "Enter") handleArtistSearch(aInput.value);
     });
   }
+
+  document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+
+    console.log("Resetting all filters...");
+
+    // --- RESET FILTER OBJECT ---
+    radarFilters.genre = null;
+    radarFilters.artist = null;
+    radarFilters.minDurationSec = null;
+    radarFilters.maxDurationSec = null;
+    radarFilters.popularityMin = null;
+    radarFilters.popularityMax = null;
+
+    // --- RESET DOM ELEMENTS ---
+
+    // Genre dropdown
+    const genreSelect = document.getElementById("genreFilter");
+    if (genreSelect) genreSelect.value = "";
+
+    // Artist input + results
+    const artistInput = document.getElementById("artistFilter");
+    if (artistInput) artistInput.value = "";
+    const artistResults = document.getElementById("ArtistSearchResults");
+    if (artistResults) artistResults.innerHTML = "";
+    const feedback = document.getElementById("ArtistSearchFeedback");
+    if (feedback) feedback.textContent = "";
+
+    // Popularity range
+    const popFilter = document.getElementById("popFilter");
+    if (popFilter) popFilter.value = 0;
+    const popValue = document.getElementById("popValue");
+    if (popValue) popValue.textContent = "0";
+
+    // --- RESET DURATION SLIDER (noUiSlider) ---
+    const durationSlider = document.getElementById("duration-slider");
+    if (durationSlider && durationSlider.noUiSlider) {
+      durationSlider.noUiSlider.set([0, 600]);  // Reset to full 0–10 min range
+    }
+
+    // --- UPDATE VISUALIZATION ---
+    updateRadar(radarFilters);
+
+  });
+
 }
 
 
@@ -1112,7 +1178,13 @@ function handleArtistSearch(query) {
     return;
   }
 
-  feedback.textContent = `Found ${matches.length} artist(s):`;
+  const artistNames = matches.map(song => song.track_artist);
+
+  // Count unique names
+  const uniqueCount = new Set(artistNames).size;
+
+  feedback.textContent = `Found ${uniqueCount} artist(s):`;
+  //feedback.textContent = `Found ${matches.length} artist(s):`;
   const seen = new Set();
 
   matches.forEach(s => {
