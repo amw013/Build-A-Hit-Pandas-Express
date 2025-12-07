@@ -5,6 +5,7 @@ export const features = [
   { id: "energy", label: "Energy", min: 0, max: 1, step: 0.01, value: 0.6 },
   { id: "valence", label: "Valence", min: 0, max: 1, step: 0.01, value: 0.5 },
   { id: "instrumentalness", label: "Instrumentalness", min: 0, max: 1, step: 0.01, value: 0.0 },
+  { id: "speechiness", label: "Speechiness", min: 0, max: 1, step: 0.01, value: 0.05 },
   { id: "acousticness", label: "Acousticness", min: 0, max: 1, step: 0.01, value: 0.3 },
   { id: "loudness", label: "Loudness (dB)", min: -20, max: 0, step: 0.1, value: -6 },
 ];
@@ -15,6 +16,7 @@ export const featureInfo = {
   energy: "a perceptual measure of intensity and activity based on features like dynamic range, perceived loudness, timbre, onset rate, and general entropy",
   valence: "musical positiveness conveyed by a track (high valence songs sound more happy, cheerful, euphoric)",
   instrumentalness: "likelihood that a track contains no vocals",
+  speechiness: "presence of spoken words in a track (higher values sound more like speech or rap)",
   acousticness: "likelihood that a track is acoustic",
   loudness: "overall loudness of a track in decibels (dB)."
 };

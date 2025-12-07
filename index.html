@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
 
 
 
@@ -40,15 +42,27 @@
   <section class="mixing-board">
 
     
-    <section class="mixing-board">
-
-    
   <br>
     <h2>Your Mixing Board</h2>
 
 
     <div class="sliders-container" id="sliders-container">
     </div>
+
+    <div class="user-song-meta">
+    <input
+      id="userSongTitle"
+      type="text"
+      placeholder="Name your song"
+    />
+    <input
+      id="userSongArtist"
+      type="text"
+      placeholder="Your artist name"
+    />
+  </div>
+
+    
 
     <button id="createSongBtn" class="create-btn metallicss">
       CREATE SONG
@@ -100,16 +114,17 @@
     <div id="hitSongInfo" class="hit-song-info"></div>
       
 
-  <section id="results" class="results hidden">
+    <section id="results" class="results hidden">
 
     <div class="scroll-section" id="result-1">
       <h2>Song’s Hit Chance</h2>
+      <div id="userSongLabel" class="user-song-label"></div>
       <div id="predictedResult"></div>
     </div>
-    <!-- Result 2: Comparison Histograms -->
+
+
     <div class="scroll-section" id="result-2">
       <h2>How Your Song Compares</h2>
-      <!-- <p>Distribution comparison for each feature.</p> -->
       <div class="hist-toggle">
         <label><input type="radio" name="histMode" value="all" checked> All songs</label>
         <label><input type="radio" name="histMode" value="hit"> Hit songs only</label>
@@ -150,9 +165,17 @@
     
 
     <div class="scroll-section" id="result-3">
-      <h2>Your 3 Most Similar Songs</h2>
-      <div id="similarSongs"></div>
-    </div>
+  <h2>Your 3 Most Similar Songs</h2>
+  <div id="similarSongs"></div>
+
+  <div class="similar-compare-container">
+    <h3>Feature comparison</h3>
+    <p class="similar-compare-text">
+  See how your mix compares to its closest songs on all the audio features in our model.
+</p>
+    <canvas id="similarCompareCanvas"></canvas>
+  </div>
+</div>
 
     <div class="scroll-section" id="result-4">
       <h2>The Verdict</h2>
@@ -200,7 +223,9 @@
       </div>
     </div>
 
-
+    <button id="startOverBtn" class="startover-btn metallicss">
+    START OVER
+  </button>
   </section>
 
   <script type="module" src="script.js"></script> 
