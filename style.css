@@ -117,16 +117,26 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 
 .results {
-  margin-top: 80px;
+  margin-top: 50px;
   opacity: 0;
 }
 
 .scroll-section {
-  padding: 30px 0;  
+  padding: 40px 0;  
   min-height: 40vh;   
   width: 70%;
   margin: 0 auto;
   opacity: 0;
+}
+
+#result-1.scroll-section{
+  padding-bottom: 0px;
+}
+
+#result-4.scroll-section{
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  min-height: 20vh !important;
 }
 
 body {
@@ -288,6 +298,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  padding-top: 30px;
 }
 
 #artistFilter {
@@ -463,7 +474,8 @@ body {
 }
 
 .hint-wrapper {
-  margin-top: 18px;
+  padding-top: 0px;
+  margin-top: 10px;
   text-align: center;
 }
 
@@ -538,12 +550,17 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: 0px
 }
 
 .hero-logo {
-  width: 500px;    /* much smaller */
+  width: 300px;    /* much smaller */
   height: auto;
   margin-bottom: 0.02rem;
+}
+
+.title{
+  margin-top: 0px;
 }
 
 @media (max-width: 640px) {
@@ -605,15 +622,18 @@ body {
   box-shadow: 0 6px 24px rgba(0,0,0,0.5);
 } */
 
-#exploreControls {
+/* #exploreControls {
   display: flex;
-  flex-direction: column;
-  align-items: center; /* center all filter groups */
-  gap: 20px;           /* vertical spacing between filters */
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 30px;           
   width: 100%;
-  max-width: 400px;    /* optional: keep filters from stretching too wide */
-  margin: 0 auto;
-}
+  max-width: 400px;   
+  margin: 30px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+} */
 
 #exploreControls label {
   display: flex;
@@ -645,9 +665,10 @@ body {
 .filter-group {
   display: flex;
   flex-direction: column;
-  align-items: center; /* center label + input */
+  align-items: flex-start; /* center label + input */
   width: 100%;
 }
+
 
 .filter-group label {
   font-weight: 600;
@@ -739,7 +760,7 @@ body {
   font-size: 0.9rem;
   color: #444;
   font-weight: 400;
-  margin-top: 0px;
+  margin-top: 6px;
 }
 
 
@@ -769,7 +790,8 @@ body {
 }
 
 .user-song-label {
-  margin-bottom: 8px;
+  margin-bottom: 30px;
+  margin-top: 30px;
   font-size: 0.9rem;
   color: #e5e7eb;
   font-style: italic;
@@ -799,6 +821,11 @@ body {
     color 0.2s ease,
     transform 0.15s ease,
     box-shadow 0.2s ease;
+}
+
+#startOverBtn.startover-btn{
+  padding-top: 0px;
+  margin-top: 0px;
 }
 
 .startover-btn:hover {
@@ -886,6 +913,13 @@ body {
   flex-direction: column;
   align-items: center;   /* horizontally center EVERYTHING */
   width: 100%;
+  max-width: 300px;
+  gap: 0px !important;
+}
+
+.artist-search-wrap input{
+  padding-top: 0px;
+  margin-top: 0px;
 }
 
 .artist-search-wrap .search-container {
@@ -896,6 +930,7 @@ body {
   flex-wrap: nowrap;
   margin-bottom: 0px;
   margin-top: 0px;
+  padding-top: 4px;
 }
 
 
@@ -944,6 +979,7 @@ body {
 
 #genreFilter{
   margin-bottom: 15px;
+  align-self: center;
 }
 
 .hero-subtext {
@@ -1047,27 +1083,86 @@ body {
 }
 
 /* === Filter bar === */
-#exploreControls {
+/* #exploreControls {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 18px;
   margin-bottom: 24px;
+} */
+
+#exploreControls {
+  display: flex !important;
+  flex-wrap: wrap !important;          /* allow items to wrap to the next line */
+  gap: 20px;                /* space between items */
+  justify-content: center;  /* center the grid */
+  max-width: 700px;         /* overall width of the group */
+  margin: 0 auto;
+  align-items: flex-start;
+  padding-top: 20px;
+  row-gap: 0px;
 }
 
-.explore-field {
+#exploreControls > * {
+  box-sizing: border-box;
+}
+
+/* Extra space only under first row items */
+.explore-field.first-row {
+  margin-bottom: 40px;   /* or whatever spacing you want */
+}
+
+
+/* .explore-field {
   display: flex;
   flex-direction: column;
   min-width: 180px;
   max-width: 260px;
   font-size: 0.85rem;
   color: #e5e7eb;
+} */
+
+.explore-field {
+  flex: 1 1 calc(50% - 20px) !important; 
+  min-width: 180px;         
+  max-width: 260px;
+  /* align-items: center; */
 }
 
-.explore-field label {
+.explore-field-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* or center, depending on your goal */
+  width: 100%;
+}
+
+
+/* .explore-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;   
+  justify-content: flex-start;
+} */
+
+.explore-field label,
+.explore-field select,
+.explore-field button,
+.explore-field input {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+
+
+.explore-field-content label {
+  text-align: center !important;
+  align-self: center;
   font-weight: 600;
   margin-bottom: 6px;
 }
+
+
+
 
 .explore-field select,
 .explore-field input[type="text"] {
@@ -1292,5 +1387,29 @@ body {
 }
 
 
+#resetFiltersBtn.search-btn{
+  margin-bottom: 25px;
+  align-self: center;
+}
 
+.explore-field button{
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  justify-content: center;
+  align-items: center;
+}
 
+#createSongBtn{
+  margin-bottom: 0px;
+}
+
+#alreadyHitBtn{
+  margin-bottom: 60px;
+}
+
+#scroll-results{
+  padding-bottom: 0px;
+  margin: 2px;
+}

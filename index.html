@@ -46,16 +46,14 @@
       alt="Spotify logo"
     />
   
-    <h1>Build-A-Hit: Can data predict a viral song?</h1>
+    <h1 class="title">Build-A-Hit: Can data predict a viral song?</h1>
   
     <p class="hero-subtext">
       Explore real Spotify data to see how popular tracks differ from the rest, 
       then try to make your very own “hit” based on those patterns.
     </p>
   
-    <button id="getStartedBtn" class="hero-cta metallicss">
-      Get started
-    </button>
+    
   
     <div class="hero-steps">
       <div class="hero-step">
@@ -71,6 +69,10 @@
         <p>Build your own track and check its “hit” profile.</p>
       </div>
     </div>
+
+    <button id="getStartedBtn" class="create-btn metallicss">
+      GET STARTED
+    </button>
 
     
 
@@ -90,43 +92,64 @@
           different genres, popularity levels, or artists, compared to all songs
           and popular songs.
         </p>
+
+        
   
         <div id="exploreControls">
-          <div class="explore-field">
-            <label for="genreFilter">Genre:</label>
-            <select id="genreFilter"></select>
+          <div class="explore-field first-row">
+            <div class="explore-field-content">
+              <label for="genreFilter">Genre:</label>
+              <select id="genreFilter"></select>
+            </div>
+          </div>
+
+          <div class="explore-field first-row">
+            <div class="explore-field-content">
+              <label>Duration:</label>
+              <div class="slider-container">
+                <div id="duration-slider"></div>
+                <div id="duration-display"></div>
+              </div>
+            </div>
+            
           </div>
         
           <div class="explore-field artist-search-wrap">
-            <label>Search for an Artist</label>
-            <div class="search-container">
-              <input
-                id="artistFilter"
-                type="text"
-                placeholder="Artist name"
-              />
-              <button id="ArtistSearchBtn" class="search-btn metallicss">
-                SEARCH
-              </button>
+            <div class="explore-field-content">
+              <label>Search for an Artist:</label>
+              <div class="search-container">
+                <input
+                  id="artistFilter"
+                  type="text"
+                  placeholder="Artist name"
+                />
+                <button id="ArtistSearchBtn" class="search-btn metallicss">
+                  SEARCH
+                </button>
+              </div>
+              <div id="ArtistSearchFeedback" class="search-feedback"></div>
+              <div id="ArtistSearchResults" class="search-results"></div>
             </div>
-            <div id="ArtistSearchFeedback" class="search-feedback"></div>
-            <div id="ArtistSearchResults" class="search-results"></div>
           </div>
         
           <div class="explore-field popularity-field">
-            <label for="popFilter">Min Popularity:</label>
-            <input id="popFilter" type="range" min="0" max="100" value="0" step="1" />
-            <span id="popValue">0</span>
+            <div class="explore-field-content">
+              <label for="popFilter">Min Popularity:</label>
+              <input id="popFilter" type="range" min="0" max="100" value="0" step="1" />
+              <span id="popValue">0</span>
+            </div>
           </div>
         
+          
+
           <div class="explore-field">
-            <label>Duration:</label>
-            <div class="slider-container">
-              <div id="duration-slider"></div>
-              <div id="duration-display"></div>
+            <div class="explore-field-content">
+              <button id="resetFiltersBtn" class="search-btn metallicss">RESET FILTERS</button>
             </div>
           </div>
         </div>
+
+        
   
         <div id="radarChartContainer">
           <canvas id="radarCanvas"></canvas>
@@ -150,7 +173,7 @@
 
         <div class="data-explorer-cta">
           <button id="toMixingBoardBtn" class="hero-cta metallicss">
-            Try the Hitmaker
+            TRY THE HITMAKER
           </button>
           <p class="data-explorer-cta-help">
             Ready to experiment? Head to the mixing board and see how your custom track
@@ -210,9 +233,9 @@
       <b>but only according to our simple model trained on this dataset</b>.
       Real world hits still depend on hype, timing, and luck.
     </div>
-
-    <p>Search for an Existing Song</p>
+    
     <div class="search-container">
+      <h2>Or Search for an Existing Song</h2>
         <input
             id="songArtistSearchInput"
             type="text"
@@ -225,15 +248,15 @@
         <div id="songArtistSearchResults" class="search-results"></div>
     </div>
 
-    <p>Or Randomly Choose a Song from our Dataset</p>
+    <h2>Or Choose a Random Hit Song from our Dataset</h2>
     <button id="alreadyHitBtn" class="create-btn metallicss">
       RANDOM HIT SONG
     </button>
 
     </div>
 
-    <p>Then Scroll for Results</p>
-    <p>⌄</p>
+    <p id="scroll-results">Then Scroll for Results</p>
+    <p id="scroll-results">⌄</p>
 
     
 
