@@ -1,5 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-import { createVerticalSliders, userValues, setPresetValues } from './verticalSliders.js';
+import { createVerticalSliders, userValues, setPresetValues, features} from './verticalSliders.js';
 gsap.registerPlugin(ScrollTrigger);
 
 
@@ -7,6 +7,7 @@ console.log("script.js loaded");
 
 let histogramMode = "all";  
 let radarChart = null;
+let similarRadarChart = null;
 
 
 
@@ -29,7 +30,7 @@ function computeHitProbability(values) {
   const acoustic    = values.acousticness;
   const instr       = values.instrumentalness;
 
-  const speech      = 0.05;
+  const speech      = values.speechiness;
   const tempo       = values.tempo;
   const loudness    = values.loudness;
   const TEMPO_MEAN = 121.052733;
@@ -54,7 +55,31 @@ function computeHitProbability(values) {
 }
 
 
+function fireConfetti() {
+  if (typeof confetti !== "function") return; 
 
+  const duration = 1500; 
+  const end = Date.now() + duration;
+
+  (function frame() {
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 }
+    });
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 }
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+}
 
 
 function describeProbability(p) {
@@ -138,6 +163,7 @@ const featureDisplayOrder = [
   { id: "energy",          label: "Energy" },
   { id: "valence",         label: "Valence" },
   { id: "instrumentalness",label: "Instrumentalness" },
+  { id: "speechiness",     label: "Speechiness" },
   { id: "acousticness",    label: "Acousticness" },
   { id: "loudness",        label: "Loudness (dB)" },
 ];
@@ -157,6 +183,7 @@ function normalizeForBars(values) {
     energy: clamp01(values.energy),
     valence: clamp01(values.valence),
     instrumentalness: clamp01(values.instrumentalness),
+    speechiness: clamp01(values.speechiness),
     acousticness: clamp01(values.acousticness),
     loudness: clamp01((values.loudness - loudMin) / (loudMax - loudMin)),
   };
@@ -188,7 +215,6 @@ function renderComparisonViz(values) {
     const row = document.createElement("div");
     row.className = "feature-row";
 
-    // main text + simple bar (what you already had)
     row.innerHTML = `
       <div class="feature-row-main">
         <div class="feature-name">${f.label}</div>
@@ -392,6 +418,124 @@ function renderSimilarSongs(mix) {
   explainer.textContent =
     "These are the three songs in the dataset closest to your mix in feature space.";
   container.appendChild(explainer);
+  renderSimilarComparisonChart(mix, similar);
+}
+
+function renderSimilarComparisonChart(mix, similarSongs) {
+  const canvas = document.getElementById("similarCompareCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  // Destroy old chart if it exists so we do not stack things
+  if (similarRadarChart) {
+    similarRadarChart.destroy();
+  }
+
+  // All features we want to compare
+  const labels = [
+    "Danceability",
+    "Energy",
+    "Valence",
+    "Acousticness",
+    "Instrumentalness",
+    "Loudness",
+    "Tempo"
+  ];
+
+  // Helper to clamp between 0 and 1
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+  // Turn a song / mix object into a 0–1 vector for the radar
+  const extractVals = (obj) => {
+    const dance  = Number(obj.danceability);
+    const energy = Number(obj.energy);
+    const val    = Number(obj.valence);
+    const ac     = Number(obj.acousticness);
+    const instr  = Number(obj.instrumentalness);
+    const loud   = Number(obj.loudness); // usually -20 to 0
+    const tempo  = Number(obj.tempo);    // usually 60–200
+
+    // normalize loudness (-20 to 0 dB) → 0–1
+    const loudNorm  = clamp01((loud + 20) / 20);
+    // normalize tempo (0–200 BPM) → 0–1
+    const tempoNorm = clamp01(tempo / 200);
+
+    return [
+      clamp01(dance),
+      clamp01(energy),
+      clamp01(val),
+      clamp01(ac),
+      clamp01(instr),
+      loudNorm,
+      tempoNorm,
+    ];
+  };
+
+  const datasets = [];
+
+  // Your mix highlighted
+  datasets.push({
+    label: "Your mix",
+    data: extractVals(mix),
+    borderWidth: 2,
+    borderColor: "rgba(0, 200, 255, 0.9)",
+    backgroundColor: "rgba(0, 200, 255, 0.2)",
+    pointRadius: 3,
+  });
+
+  // Each similar song as a grey line
+  similarSongs.forEach((song) => {
+    const shortName =
+      song.track_name.length > 18
+        ? song.track_name.slice(0, 18) + "…"
+        : song.track_name;
+
+    datasets.push({
+      label: shortName,
+      data: extractVals(song),
+      borderWidth: 1,
+      borderColor: "rgba(200, 200, 200, 0.7)",
+      backgroundColor: "rgba(200, 200, 200, 0.15)",
+      pointRadius: 2,
+    });
+  });
+
+  similarRadarChart = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels,
+      datasets,
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          min: 0,
+          max: 1,
+          angleLines: { color: "#444" },
+          grid: { color: "#222" },
+          pointLabels: {
+            color: "#f9fafb",
+            font: { size: 11 },
+          },
+          ticks: {
+            display: false,
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: "#f9fafb",
+            font: { size: 11 },
+          },
+        },
+      },
+    },
+  });
 }
 
 
@@ -420,17 +564,15 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
   let datasetB = [];
 
   if (histogramMode === "all") {
-    datasetA = allVals;     // one histogram only
+    datasetA = allVals; 
     datasetB = null;
   } else if (histogramMode === "hit") {
-    datasetA = hitVals;     // hits only
+    datasetA = hitVals; 
     datasetB = null;
   } else if (histogramMode === "both") {
-    datasetA = nonHitVals;  // base layer
-    datasetB = hitVals;     // overlay
+    datasetA = nonHitVals; 
+    datasetB = hitVals;
   }
-
-  // const allVals = hitVals.concat(nonHitVals);
   
   const margin = { top: 5, right: 5, bottom: 5, left: 5 };
   const width  = (containerEl.clientWidth || 260) - margin.left - margin.right;
@@ -443,7 +585,7 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
   const x = d3.scaleLinear()
-    .domain(d3.extent(datasetA))   // base domain from datasetA
+    .domain(d3.extent(datasetA)) 
     .nice()
     .range([0, width]);
 
@@ -468,7 +610,6 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
       .style("left", (event.clientX + 12) + "px")
       .style("top",  (event.clientY + 12) + "px");
   };
-  // -------- A LAYER ----------
   svg.selectAll(".bar-A")
     .data(binsA)
     .enter().append("rect")
@@ -494,7 +635,6 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
         `);
       })
       .on("mousemove", function (event, d) {
-        // just move tooltip with the mouse
         moveTooltip(event, `
           <strong>All songs</strong><br/>
           Range: ${d.x0.toFixed(2)} – ${d.x1.toFixed(2)}<br/>
@@ -513,7 +653,6 @@ function renderFeatureHistogramForFeature(featureId, mixValue, containerEl) {
         histTooltip.style("opacity", 0);
       });
 
-  // --------- OPTIONAL B OVERLAY ----------
   if (datasetB) {
     svg.selectAll(".bar-B")
       .data(binsB)
@@ -609,7 +748,7 @@ function makeRadarChart(data) {
   radarChart = new Chart(ctx, {
     type: "radar",
     data: {
-      labels: ["danceability", "energy", "valence", "acousticness", "instrumentalness", "loudness", "tempo"],
+      labels: ["danceability", "energy", "valence", "acousticness", "instrumentalness","speechiness", "loudness", "tempo"],
       datasets: [
         {
           label: "All Songs (Mean)",
@@ -640,7 +779,7 @@ function makeRadarChart(data) {
           angleLines: { color: "#555" },
           grid: { color: "#222" },
           pointLabels: { color: "#fff", font: { size: 12 } },
-          ticks: { color: "#fff", backdropColor: "#000" }, // numbers with black background
+          ticks: { color: "#fff", backdropColor: "#000" },
           beginAtZero: true,
           min: 0,
           max: 1
@@ -659,7 +798,7 @@ function computeMeans(list) {
   if (!list.length) return [0,0,0,0,0,0,0];
 
   const sum = { danceability:0, energy:0, valence:0, acousticness:0, 
-                instrumentalness:0, loudness:0, tempo:0 };
+                instrumentalness:0, speechiness: 0, loudness:0, tempo:0 };
 
   list.forEach(s => {
     sum.danceability += Number(s.danceability);
@@ -667,8 +806,9 @@ function computeMeans(list) {
     sum.valence += Number(s.valence);
     sum.acousticness += Number(s.acousticness);
     sum.instrumentalness += Number(s.instrumentalness);
+    sum.speechiness      += Number(s.speechiness);
     sum.loudness += Number(s.loudness);
-    sum.tempo += Number(s.tempo) / 200;  // scale tempo 0–1
+    sum.tempo += Number(s.tempo) / 200; 
   });
 
   const n = list.length;
@@ -676,9 +816,8 @@ function computeMeans(list) {
 }
 
 function updateRadar(filters) {
-  const features = ["danceability", "energy", "valence", "acousticness", "instrumentalness", "loudness", "tempo"];
+  const features = ["danceability", "energy", "valence", "acousticness", "instrumentalness", "speechiness", "loudness", "tempo"];
 
-  // Filtered songs
   let filtered = songs;
   console.log(filtered.length)
 
@@ -771,35 +910,72 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const results = document.getElementById("results");
 
-  const runModel = async () => {
-    results.classList.remove("hidden");
+  const runModel = async ({ trigger = "other" } = {}) => {
+  results.classList.remove("hidden");
 
-    const mix = { ...userValues };
-    currentSongValues = mix;
+  const mix = { ...userValues };
+  currentSongValues = mix;
     
-    const prob = computeHitProbability(mix);
+  const prob = computeHitProbability(mix);
 
-    renderPredictedResult(prob);
-    await songsPromise;
+  // if CREATE SONG and prob >= 0.08 → celebrate
+  if (trigger === "create" && prob >= 0.08) {
+    fireConfetti();
+  }
 
+  renderPredictedResult(prob);
+  await songsPromise;
 
+  if (!songs.length) {
+    const container = document.getElementById("comparisonViz");
+    if (container) {
+      container.innerHTML = "<p style='color:#ddd'>Data still loading or failed to load — try again in a second.</p>";
+    }
+  } else {
+    renderComparisonViz(mix);
+    renderSimilarSongs(mix);
+  }
 
-    
+  gsap.to(results, { opacity: 1, duration: 0.6 });
+  enableScrollSections();
+};
 
+  const createBtn = document.getElementById("createSongBtn");
+  function updateUserSongLabelFromInputs() {
+  const titleInput  = document.getElementById("userSongTitle");
+  const artistInput = document.getElementById("userSongArtist");
+  const labelEl     = document.getElementById("userSongLabel");
 
-    if (!songs.length) {
-      const container = document.getElementById("comparisonViz");
-      if (container) {
-        container.innerHTML = "<p style='color:#ddd'>Data still loading or failed to load — try again in a second.</p>";
-      }
-    } else {
-      renderComparisonViz(mix);
-      renderSimilarSongs(mix);
+  if (!labelEl) return;
+
+  const rawTitle  = titleInput  ? titleInput.value.trim()  : "";
+  const rawArtist = artistInput ? artistInput.value.trim() : "";
+
+  const title  = rawTitle  || "Untitled track";
+  const artist = rawArtist || "Unknown artist";
+
+  labelEl.innerHTML = `
+    <div class="song-card user-song-card">
+      <div class="song-title">${title}</div>
+      <div class="song-artist">${artist}</div>
+      <div class="song-popularity">
+        Your custom song
+      </div>
+    </div>
+  `;
+}
+
+  document.getElementById("createSongBtn").addEventListener("click", () => {
+    currentSong = null;
+
+    const infoEl = document.getElementById("hitSongInfo");
+    if (infoEl) {
+      infoEl.textContent = "";
     }
 
-    gsap.to(results, { opacity: 1, duration: 0.6 });
-    enableScrollSections();
-  };
+    updateUserSongLabelFromInputs();
+    runModel({ trigger: "create" });
+  });
 
 
 
@@ -811,14 +987,6 @@ window.addEventListener("DOMContentLoaded", () => {
   });
     
 
-  document.getElementById("createSongBtn").addEventListener("click", () => {
-    currentSong = null;
-    const infoEl = document.getElementById("hitSongInfo");
-    if (infoEl) {
-      infoEl.textContent = "";
-    }
-    runModel();
-  });
 
 
   const alreadyBtn = document.getElementById("alreadyHitBtn");
@@ -850,12 +1018,22 @@ window.addEventListener("DOMContentLoaded", () => {
         loudness:         Number(hitSong.loudness),
       };
 
-      const infoEl = document.getElementById("hitSongInfo");
-      if (infoEl) {
-        const pop = hitSong.track_popularity ?? "N/A";
-        infoEl.textContent =
-          `Using song: ${hitSong.track_name} — ${hitSong.track_artist} (popularity ${pop})`;
-      }
+      const labelEl = document.getElementById("userSongLabel");
+      if (labelEl) {
+        const pop  = hitSong.track_popularity ?? "N/A";
+        const link = hitSong.track_url;
+
+        labelEl.innerHTML = `
+          <div class="song-card user-song-card">
+            <div class="song-title">${hitSong.track_name}</div>
+            <div class="song-artist">${hitSong.track_artist}</div>
+            <div class="song-popularity">Actual Spotify popularity: ${pop}</div>
+            ${
+              link
+                ? `<a class="song-link" href="${link}" target="_blank" rel="noopener noreferrer">
+                     ▶ Listen on Spotify
+                  </a>`
+                : ""}</div>`;}
 
       setPresetValues(preset);
       runModel();
@@ -879,26 +1057,42 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
   function applySongToSliders(song) {
-    currentSong = song; 
+  currentSong = song; 
 
-    const infoEl = document.getElementById("hitSongInfo");
-    if (infoEl) {
-      infoEl.textContent = "";
-    }
+  const labelEl = document.getElementById("userSongLabel");
+  if (labelEl) {
+    const pop  = song.track_popularity ?? "N/A";
+    const link = song.track_url;
 
-    const preset = {
-      tempo:            Number(song.tempo),
-      danceability:     Number(song.danceability),
-      energy:           Number(song.energy),
-      valence:          Number(song.valence),
-      instrumentalness: Number(song.instrumentalness),
-      acousticness:     Number(song.acousticness),
-      loudness:         Number(song.loudness),
-    };
-
-    setPresetValues(preset);
-    runModel();
+    labelEl.innerHTML = `
+      <div class="song-card user-song-card">
+        <div class="song-title">${song.track_name}</div>
+        <div class="song-artist">${song.track_artist}</div>
+        <div class="song-popularity">Actual Spotify popularity: ${pop}</div>
+        ${
+          link
+            ? `<a class="song-link" href="${link}" target="_blank" rel="noopener noreferrer">
+                 ▶ Listen on Spotify
+               </a>`
+            : ""
+        }
+      </div>
+    `;
   }
+
+  const preset = {
+    tempo:            Number(song.tempo),
+    danceability:     Number(song.danceability),
+    energy:           Number(song.energy),
+    valence:          Number(song.valence),
+    instrumentalness: Number(song.instrumentalness),
+    acousticness:     Number(song.acousticness),
+    loudness:         Number(song.loudness),
+  };
+
+  setPresetValues(preset);
+  runModel();
+}
 
 
   const saInput = document.getElementById("songArtistSearchInput");
@@ -1142,6 +1336,62 @@ window.addEventListener("DOMContentLoaded", () => {
       if (e.key === "Enter") handleArtistSearch(aInput.value);
     });
   }
+
+  const startOverBtn = document.getElementById("startOverBtn");
+
+if (startOverBtn) {
+  startOverBtn.addEventListener("click", () => {
+    // 1) Smooth scroll back to the mixing board
+    const mixingBoard = document.querySelector(".mixing-board");
+    if (mixingBoard) {
+      mixingBoard.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    } else {
+      // fallback just in case
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // 2) Clear any song info / labels
+    const infoEl = document.getElementById("hitSongInfo");
+    if (infoEl) infoEl.textContent = "";
+
+    const labelEl = document.getElementById("userSongLabel");
+    if (labelEl) labelEl.textContent = "Your custom mix";
+
+    // 3) Clear custom title / artist inputs
+    const titleInput  = document.getElementById("userSongTitle");
+    const artistInput = document.getElementById("userSongArtist");
+    if (titleInput)  titleInput.value = "";
+    if (artistInput) artistInput.value = "";
+
+    // 4) Reset sliders back to defaults
+    setPresetValues({
+      tempo: 120,
+      danceability: 0.5,
+      energy: 0.6,
+      valence: 0.5,
+      instrumentalness: 0.0,
+      speechiness: 0.05,
+      acousticness: 0.3,
+      loudness: -6
+    });
+
+    // 5) Optionally hide / fade out results
+    const results = document.getElementById("results");
+    if (results) {
+      gsap.to(results, {
+        opacity: 0,
+        duration: 0.4,
+        onComplete: () => {
+          results.classList.add("hidden");
+          results.style.opacity = 1;
+        }
+      });
+    }
+  });
+}
 
 
 });
