@@ -320,7 +320,7 @@ function closingSummary(p) {
   }
 
   if (p < 0.02) {
-    return "Missed the mark... Hint: Some features are more important than others! Think about what features you notice most as a listener.";
+    return "Missed the mark... Hint: Some features are more important than others! Think about what features you notice most as a listener. Or maybe your song is just unconventionally good!";
   } else if (p < 0.04) {
     return "Let's Try Something Else... Song popularity can be unpredictable! Maybe algorithms aren't enough to capture the emotional reactions music can elicit.";
   } else if (p < 0.07) {
