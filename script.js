@@ -366,13 +366,14 @@ function renderPredictedResult(prob) {
 
 
 const featureDisplayOrder = [
-  { id: "tempo",           label: "Tempo (BPM)" },
+  
   { id: "danceability",    label: "Danceability" },
   { id: "energy",          label: "Energy" },
   { id: "valence",         label: "Valence" },
+  { id: "acousticness",    label: "Acousticness" },
   { id: "instrumentalness",label: "Instrumentalness" },
   { id: "speechiness",     label: "Speechiness" },
-  { id: "acousticness",    label: "Acousticness" },
+  { id: "tempo",           label: "Tempo (BPM)" },
   { id: "loudness",        label: "Loudness (dB)" },
 ];
 
@@ -386,13 +387,14 @@ function normalizeForBars(values) {
   const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
   return {
-    tempo: clamp01((values.tempo - tempoMin) / (tempoMax - tempoMin)),
+    
     danceability: clamp01(values.danceability),
     energy: clamp01(values.energy),
     valence: clamp01(values.valence),
+    acousticness: clamp01(values.acousticness),
     instrumentalness: clamp01(values.instrumentalness),
     speechiness: clamp01(values.speechiness),
-    acousticness: clamp01(values.acousticness),
+    tempo: clamp01((values.tempo - tempoMin) / (tempoMax - tempoMin)),
     loudness: clamp01((values.loudness - loudMin) / (loudMax - loudMin)),
   };
 }
@@ -556,6 +558,9 @@ function distance(song, mix) {
     Math.pow(f("danceability") - mix.danceability, 2) +
     Math.pow(f("energy")       - mix.energy, 2) +
     Math.pow(f("valence")      - mix.valence, 2) +
+    Math.pow(f('acousticness')  - mix.acousticness, 2) +
+    Math.pow(f('instrumentalness') - mix.instrumentalness, 2) +
+    Math.pow(f('speechiness') - mix.speechiness, 2) +
     Math.pow(f("tempo")        - mix.tempo, 2) / 10000 + 
     Math.pow(f("loudness")     - mix.loudness, 2) / 10
   );
@@ -648,8 +653,9 @@ function renderSimilarComparisonChart(mix, similarSongs) {
     "Valence",
     "Acousticness",
     "Instrumentalness",
+    'Speechiness',
+    'Tempo',
     "Loudness",
-    "Tempo"
   ];
 
   // Helper to clamp between 0 and 1
@@ -662,8 +668,10 @@ function renderSimilarComparisonChart(mix, similarSongs) {
     const val    = Number(obj.valence);
     const ac     = Number(obj.acousticness);
     const instr  = Number(obj.instrumentalness);
-    const loud   = Number(obj.loudness); // usually -20 to 0
+    const speech = Number(obj.speechiness);
     const tempo  = Number(obj.tempo);    // usually 60–200
+    const loud   = Number(obj.loudness); // usually -20 to 0
+    
 
     // normalize loudness (-20 to 0 dB) → 0–1
     const loudNorm  = clamp01((loud + 20) / 20);
@@ -676,8 +684,9 @@ function renderSimilarComparisonChart(mix, similarSongs) {
       clamp01(val),
       clamp01(ac),
       clamp01(instr),
-      loudNorm,
+      clamp01(speech), 
       tempoNorm,
+      loudNorm,
     ];
   };
 
@@ -741,7 +750,8 @@ function renderSimilarComparisonChart(mix, similarSongs) {
             font: { size: 11 },
           },
           ticks: {
-            display: false,
+            display: true,
+            backdropColor: 'transparent',
           },
         },
       },
@@ -967,7 +977,7 @@ function makeRadarChart(data) {
   radarChart = new Chart(ctx, {
     type: "radar",
     data: {
-      labels: ["danceability", "energy", "valence", "acousticness", "instrumentalness","speechiness", "loudness", "tempo"],
+      labels: ["danceability", "energy", "valence", "acousticness", "instrumentalness","speechiness", "tempo", "loudness"],
       datasets: [
         {
           label: "All Songs (Mean)",
@@ -1017,7 +1027,7 @@ function computeMeans(list) {
   if (!list.length) return [0,0,0,0,0,0,0];
 
   const sum = { danceability:0, energy:0, valence:0, acousticness:0, 
-                instrumentalness:0, speechiness: 0, loudness:0, tempo:0 };
+                instrumentalness:0, speechiness: 0, tempo:0, loudness:0 };
 
   list.forEach(s => {
     sum.danceability += Number(s.danceability);
@@ -1026,8 +1036,8 @@ function computeMeans(list) {
     sum.acousticness += Number(s.acousticness);
     sum.instrumentalness += Number(s.instrumentalness);
     sum.speechiness      += Number(s.speechiness);
-    sum.loudness += Number(s.loudness);
-    sum.tempo += Number(s.tempo) / 200; 
+    sum.tempo += Number(s.tempo) / 200;
+    sum.loudness += Number(s.loudness); 
   });
 
   const n = list.length;
@@ -1035,7 +1045,7 @@ function computeMeans(list) {
 }
 
 function updateRadar(filters) {
-  const features = ["danceability", "energy", "valence", "acousticness", "instrumentalness", "speechiness", "loudness", "tempo"];
+  const features = ["danceability", "energy", "valence", "acousticness", "instrumentalness", "speechiness", "tempo", "loudness"];
 
   let filtered = songs;
   console.log(filtered.length)
@@ -1108,6 +1118,10 @@ function updateRadar(filters) {
 
   // Function to compute mean of features
   function meanFeatures(songArray) {
+    console.log(
+      "Instrumentalness values in filtered dataset:",
+      filtered.map(song => Number(song.instrumentalness))
+    );
     const meanObj = {};
     features.forEach(f => {
       const vals = songArray.map(s => Number(s[f])).filter(v => !isNaN(v));
@@ -1159,12 +1173,13 @@ async function loadData() {
     danceability: s.danceability,
     energy: s.energy,
     valence: s.valence,
+    acousticness: s.acousticness,
+    instrumentalness: s.instrumentalness,
+    speechiness: s.speechiness,
     tempo: s.tempo,
     loudness: s.loudness,
     duration_ms: s.duration_ms,
     track_popularity: s.track_popularity,
-    instrumentalness: s.instrumentalness,
-    acousticness: s.acousticness,
     is_hit: s.is_hit
   }));
 
@@ -1568,12 +1583,13 @@ if (toMixingBoardBtn) {
       if (saResults)  saResults.innerHTML = "";
 
       const preset = {
-        tempo:            Number(hitSong.tempo),
         danceability:     Number(hitSong.danceability),
         energy:           Number(hitSong.energy),
         valence:          Number(hitSong.valence),
-        instrumentalness: Number(hitSong.instrumentalness),
         acousticness:     Number(hitSong.acousticness),
+        instrumentalness: Number(hitSong.instrumentalness),
+        speechiness:      Number(hitSong.speechiness),
+        tempo:            Number(hitSong.tempo),
         loudness:         Number(hitSong.loudness),
       };
 
@@ -1640,12 +1656,14 @@ if (toMixingBoardBtn) {
   }
 
   const preset = {
-    tempo:            Number(song.tempo),
+    
     danceability:     Number(song.danceability),
     energy:           Number(song.energy),
     valence:          Number(song.valence),
-    instrumentalness: Number(song.instrumentalness),
     acousticness:     Number(song.acousticness),
+    instrumentalness: Number(song.instrumentalness),
+    speechiness:      Number(song.speechiness),
+    tempo:            Number(song.tempo),
     loudness:         Number(song.loudness),
   };
 
@@ -1738,45 +1756,6 @@ if (toMixingBoardBtn) {
     });
   }
 
-  // songsPromise.then(() => {
-  //   const genreSelect = document.getElementById("genreFilter");
-  //   console.log("genreSelect:", genreSelect);
-  //   if (!genreSelect) return;
-
-  //   const genres = ['all', ...new Set(songs.map(d => d.playlist_genre).filter(Boolean))].sort();
-  //   console.log("Genres found:", genres);
-
-
-  //   genreSelect.innerHTML = "";
-  //   genres.forEach(g => {
-  //     const opt = document.createElement("option");
-  //     opt.value = g;
-  //     opt.textContent = g;
-  //     genreSelect.appendChild(opt);
-  //   });
-  // });
-
-  
-// songsPromise.then(() => {
-//   songs = spotifyData.map(s => ({
-//     track_name: s.track_name,
-//     track_artist: s.track_artist,
-//     playlist_genre: s.playlist_genre,
-//     danceability: s.danceability,
-//     energy: s.energy,
-//     valence: s.valence,
-//     tempo: s.tempo,
-//     loudness: s.loudness,
-//     duration_ms: s.duration_ms,
-//     track_popularity: s.track_popularity,
-//     instrumentalness: s.instrumentalness,
-//     acousticness: s.acousticness
-//   }));
-
-//   updateRadar(radarFilters);
-
-// });
-  
 
 
 
@@ -1828,13 +1807,14 @@ if (startOverBtn) {
 
     // 4) Reset sliders back to defaults
     setPresetValues({
-      tempo: 120,
+      
       danceability: 0.5,
       energy: 0.6,
       valence: 0.5,
+      acousticness: 0.3,
       instrumentalness: 0.0,
       speechiness: 0.05,
-      acousticness: 0.3,
+      tempo: 120,
       loudness: -6
     });
 
